@@ -1,0 +1,192 @@
+[mysql install - 버전 10.5 이상]
+
+cat << EOF >> /etc/yum.repos.d/MaraiDB.repo
+# MariaDB 10.5 CentOS repository list - created 2021-03-16 03:20 UTC
+# http://downloads.mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.5/centos7-amd64
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOF 
+
+yum install -y MariaDB-server MariaDB-client
+
+systemctl restart mysql 
+mysql_secure_installation 
+	(root pw : welcome1)
+ 
+mysql -u root -pwelcome1
+
+grant usage on *.* to dbtest_1@'%' IDENTIFIED BY 'welcome1';
+flush privileges;
+exit;
+
+grant usage on *.* to dbtest_2@'%' IDENTIFIED BY 'welcome1';
+flush privileges;
+exit;
+
+
+[ Prometheus sh ]
+cd /usr/share/
+wget https://github.com/prometheus/prometheus/releases/download/v2.44.0/prometheus-2.44.0.linux-amd64.tar.gz
+tar xvfz prometheus-*.tar.gz
+
+cat << EOF >> /etc/systemd/system/prometheus.service
+[Unit]
+Description=Prometheus Server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=root
+Group=root
+Type=simple
+ExecStart=/usr/share/prometheus-2.44.0.linux-amd64/prometheus --config.file=/usr/share/prometheus-2.44.0.linux-amd64/prometheus.yml
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable prometheus --now
+systemctl status prometheus
+
+
+[ Node_Exporter sh ]
+cd /usr/share/
+wget https://github.com/prometheus/node_exporter/releases/download/v1.5.0/node_exporter-1.5.0.linux-amd64.tar.gz
+tar xzvf node_exporter-1.5.0.linux-amd64.tar.gz
+
+cat << EOF >> /etc/systemd/system/node_exporter.service
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=root
+Group=root
+Type=simple
+ExecStart=/usr/share/node_exporter-1.5.0.linux-amd64/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable node_exporter --now
+systemctl status node_exporter
+
+
+[mysqld_exporter]
+cd /usr/share/
+wget https://github.com/prometheus/mysqld_exporter/releases/download/v0.14.0/mysqld_exporter-0.14.0.linux-amd64.tar.gz
+
+tar xzvf mysqld_exporter-0.14.0.linux-amd64.tar.gz
+cd mysqld_exporter-0.14.0.linux-amd64
+
+cat << EOF >> mysqld_exporter.cnf
+[client]
+user=exporter
+password=exporter_password
+EOF
+
+
+- mysqld exporter setting - create_db_user
+mysql -u root -pwelcome1
+CREATE USER 'exporter'@'localhost' IDENTIFIED BY 'exporter_password' WITH MAX_USER_CONNECTIONS 2; 
+GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'localhost'; 
+FLUSH PRIVILEGES; 
+EXIT;
+
+
+cat << EOF >/etc/systemd/system/mysqld_exporter.service
+[Unit]
+Description=MySQL Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=root
+Group=root
+Type=simple
+Restart=always
+ExecStart=/usr/share/mysqld_exporter-0.14.0.linux-amd64/mysqld_exporter \
+--config.my-cnf /usr/share/mysqld_exporter-0.14.0.linux-amd64/mysqld_exporter.cnf \
+--collect.global_status \
+--collect.info_schema.innodb_metrics \
+--collect.auto_increment.columns \
+--collect.info_schema.processlist \
+--collect.binlog_size \
+--collect.info_schema.tablestats \
+--collect.global_variables \
+--collect.info_schema.query_response_time \
+--collect.info_schema.userstats \
+--collect.info_schema.tables \
+--collect.perf_schema.tablelocks \
+--collect.perf_schema.file_events \
+--collect.perf_schema.eventswaits \
+--collect.perf_schema.indexiowaits \
+--collect.perf_schema.tableiowaits \
+--collect.slave_status \
+--web.listen-address=0.0.0.0:9104
+
+[Install]  
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable mysqld_exporter --now
+systemctl status mysqld_exporter
+
+
+--------
+- 포트 확인
+
+netstat -tnlp | grep -e node_exporter -e mysqld_export
+tcp6       0      0 :::9100                 :::*                    LISTEN      3182/node_exporter
+tcp6       0      0 :::9104                 :::*                    LISTEN      3993/mysqld_exporte
+
+cd /usr/share/prometheus-2.44.0.linux-amd64
+
+>vi prometheus.yml
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "prometheus"
+
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "mysqld-exporter"
+    static_configs:
+      - targets: ["192.168.1.101:9104", "192.168.1.102:9104"]
+
+  - job_name: "nord-exporter"
+    static_configs:
+      - targets: ["192.168.1.101:9100", "192.168.1.102:9100"]
+~
+sudo systemctl restart prometheus.service
+sudo systemctl status prometheus.service
+
+[grafana]
+yum install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-9.5.2-1.x86_64.rpm
+yum install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-10.3.1-1.x86_64.rpm
+systemctl enable grafana-server.service --now
+systemctl status grafana-server.service 
+ 
+netstat -tlnp | grep grafana
+tcp6       0      0 :::3000                 :::*                    LISTEN      2378/grafana
+
+
+Grafana 접속 > [IP주소]:3000/login 
+기본 로그인 정보: admin / admin
+
+
+* data source 추가 
+	- Connection > Connect data > Prometheus 검색 후 추가 
+		URL : http://localhost:9090 
+		- Save & test 결과 정상이면 완료

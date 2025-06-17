@@ -1,0 +1,559 @@
+
+==오픈스택 재단이 주도하여 6개월마다 업데이트를 릴리즈
+
+--오픈스택은 프라이빗 클라우드임
+
+==오픈스택의 대표적인 서비스
+1.keystone : (인증서비스, 데이터베이스-MariaDB) 
+아래의 모든 서비스에 접근하기 위해서는 keystone을 통해서 접근해야함
+
+2.glance :
+
+3.nova : (computing서비스 , 가상머신(인스턴스) 생성, 스토리지 생성 > Hypervisor )
+(default hypervisor : KVM , 상용버전인 VMware ESXi를 사용할수도 있음)
+무언가 새로운것을 만들어내는것은 nova서비스
+
+4.horizon
+
+5.Neutron
+
+6.Cinder 
+
+7.Swift (Storage 서비스, 각 사용자별로 일정공간을 제공하는 서비스,
+object storage : 로그인에따라서 사용자별로 독립적인 사용공간[container]을 
+제공함)
+
+==오픈스택의 기본구조 - 대분류
+1.compute ex) Nova
+2.network  ex) Neutron
+3.storage   ex) cinder,swift
+
+서비스의 연결은 API를 통해서 가능
+Dash Board서비스 
+
+==오픈스택의 버전
+Austin : nova, swift
+
+
+--오픈스택 환경구축
+vmnet1 
+---------------------------------------------------------
+  |192.168.1.100/24      |.101		    |.102		
+control		
+network		compute1		compute2
+storager		   CPU4		cpu4,ram4
+[cpu4 ram8	    ram4		disk 120
+disk 240] 		DISK 120			
+  | 10.5.116.100/8 	   |.101 		   | .102
+---------------------------------------------------------
+bridge
+
+bridge 대역 : 10.5.116.x/8대역을 사용하기
+
+3노드 모두 
+
+firwalld/selinux/NetworkManager disable stop
+yum -y update
+
+/etc/hosts에 추가
+control		192.168.1.100
+compute1 	192.168.1.101
+compute2	192.168.1.102
+>echo -e "control\t192.168.1.100\ncompute1\t192.168.1.101\ncompute2\t192.168.1.102" /etc/hosts 
+
+vi /etc/default/grub 에서 6번째 행의 마지막에 net.ifnames=0 biosdevname=0 입력
+
+
+      6 rhgb quiet net.ifnames=0 biosdevname=0"
+
+> sed -i "s/quiet/quiet net.ifnames=0 biosdevname=0/g" /etc/default/grub
+
+sed -i "s/quiet/quiet net.ifnames=0 biosdevname=0/g" /etc/defualt/grub
+mv /etc/sysconfig/network-scripts/ifcfg-ens32 /etc/sysconfig/network-scripts/ifcfg-eth0
+mv /etc/sysconfig/network-scripts/ifcfg-ens33 /etc/sysconfig/network-scripts/ifcfg-eth1
+
+-control1
+echo -e "TYPE=Ethernet\nBOOTPROTO=none\nNAME=eth0\nDEVICE=eth0\nONBOOT=yes\nIPADDR=10.5.116.100\nPREFIX=8\nGATEWAY=10.0.0.1\nDNS1=8.8.8.8\nNM_CONTROLLED=no">/etc/sysconfig/network-scripts/ifcfg-eth0 
+echo -e "TYPE=Ethernet\nBOOTPROTO=none\nNAME=eth1\nDEVICE=eth1\nONBOOT=yes\nIPADDR=192.168.1.100\nPREFIX=24\nNM_CONTROLLED=no">/etc/sysconfig/network-scripts/ifcfg-eth1
+
+-compute1
+echo -e "TYPE=Ethernet\nBOOTPROTO=none\nNAME=eth0\nDEVICE=eth0\nONBOOT=yes\nIPADDR=10.5.116.101\nPREFIX=8\nGATEWAY=10.0.0.1\nDNS1=8.8.8.8\nNM_CONTROLLED=no">/etc/sysconfig/network-scripts/ifcfg-eth0 
+echo -e "TYPE=Ethernet\nBOOTPROTO=none\nNAME=eth1\nDEVICE=eth1\nONBOOT=yes\nIPADDR=192.168.1.101\nPREFIX=24\nNM_CONTROLLED=no">/etc/sysconfig/network-scripts/ifcfg-eth1
+
+-compute2
+echo -e "TYPE=Ethernet\nBOOTPROTO=none\nNAME=eth0\nDEVICE=eth0\nONBOOT=yes\nIPADDR=10.5.116.102\nPREFIX=8\nGATEWAY=10.0.0.1\nDNS1=8.8.8.8\nNM_CONTROLLED=no">/etc/sysconfig/network-scripts/ifcfg-eth0 
+echo -e "TYPE=Ethernet\nBOOTPROTO=none\nNAME=eth1\nDEVICE=eth1\nONBOOT=yes\nIPADDR=192.168.1.102\nPREFIX=24\nNM_CONTROLLED=no">/etc/sysconfig/network-scripts/ifcfg-eth1
+
+
+echo "NM_CONTROLLED=no" >>/etc/sysconfig/network-scripts/ifcfg-eth0 
+echo "NM_CONTROLLED=no" >>/etc/sysconfig/network-scripts/ifcfg-eth1
+
+grub2-mkconfig -o /boot/grub2/grub.cfg
+reboot
+
+yum -y install vim curl wget git net-tools
+yum -u update
+
+echo "alias vi='vim'">> /root/.bashrc
+su
+
+-------------------------------------------------------------------------------------
+-control 노드 작업
+
+1.오픈스택 버전 rocky를 설치하기위한 저장소목록 설치
+yum -y install centos-release-openstack-rocky
+
+yum -y update
+
+2.스크립트 툴을 이용한 자동설치를 위해 packstack을 설치
+yum -y install openstack-packstack
+
+3.packstack을 이용하여 설치를 위한 스크립트를 작성
+
+packstack --gen-answer-file=answer.txt
+
+4. answer.txt 편집
+-------------------------------------------------------
+CONFIG_LBAAS_INSTALL=n > y
+CONFIG_HEAT_INSTALL=n > y
+CONFIG_MARIADB_PW=12e0da3c30f14814 > test123
+CONFIG_KEYSTONE_ADMIN_PW=262d8283aec248ad >test123
+CONFIG_KEYSTONE_DEMO_PW=bb708c077c304348 > demo
+
+STORAGE SAHRA > 192.168.1.x로 바뀐것 확인
+
+1193 번 , 1242 번라인 ip대역을 10.5.116.0/8 로 변경
+
+ sed -i "s/10.5.116./192.168.1./g" answer.txt
+
+CONFIG_COMPUTE_HOSTS=192.168.1.100 > 192.168.1.101,192.168.1.102
+CONFIG_NETWORD_HOSTS=192.168.1.100
+--------------------------------------------------
+5.설치하기 
+
+packstack --answer-file=answer.txt
+
+설치완료 후 ls해보면 토큰 파일 두개가 보임
+
+6. 작동확인하기 
+
+source keystonerc_admin 혹은
+source keystonerc_demo 를통해 오픈스택 접속
+
+openstack network list
+openstack router list
+openstack image list
+openstack server list
+
+mysql -u root -ptest123을통해
+db 구성 정보를 확인가능
+
+7. 토큰 유효시간 편집
+
+vi /etc/openstack-dashboard/local_settings
+-----------------------------------------
+SESSION_TIMEOUT = 14400
+------------------------------------------
+
+
+ vi /etc/keystone/keystone.conf
+------------------------------------------
+[TOKEN]
+~~~
+~~~
+~~~
+expiration=14400
+----------------------------------------------
+
+source keystonerc_admin
+systemctl restart httpd 로 설정을 적용하기
+
+웹브라우저에서 192.168.1.100(backend 주소) 로 접속하기
+
+메인로고 : /usr/share/openstack-dashboard/static/dashboard/img/logo-splash.svg
+
+
+네트워크를 지우려면 먼저 라우터를 지워야한다.
+
+생성시에는 먼저 네트워크를 생성한뒤
+게이트웨이ip를 라우터의 ip로 지정한다
+
+외부네트워크의 생성은 Admin만 가능하다
+
+
+네트워크 생성시  게이트웨이 IP지정하지않고 넘어가면
+자동으로 대역의 1번 ip가 지정
+
+=keystone 
+
+사용자 > 로그인> project (tenent :클라우드 환경) > 멀티테넌시 (한공간에 여러테넌트가 서로에게 영향을 주지않고 공존하는 공간)
+> keystone 이 인증성공! > 사용자는 클라우드 환경을 이용할수 있는 TOKEN을 발급받는다
+---end point (서비스와 사용자를 연결하는 주소) < ==== > 서비스 
+
+
+역할 : 로그인에 성공한 사용자는 클라우드 환경내에서 이용 또는 제어가능 한 서비스의 범위를 부여받는다.
+role(역할) > RBAC(Role Based Access Control )
+
+도메인 : 사용자 , 그룹 + 프로젝트 
+
+Key stone 서비스 > 사용자 , 그룹 프로젝트 등을 모두 MariaDB에 저장하고 인증수행은 LDAP를이용함
+
+
+-glance에 이미지 등록
+https://docs.openstack.org/image-guide/obtain-images.html에서
+원하는 이미지를 찾아서 다운로드하여 GUI메뉴에서 업로드
+혹은
+CLI에서 wget을 통해 받아와서 openstack image create로 추가
+
+ex) 
+openstack image create "UBUNTU1804" --file bionic-server-cloudimg-amd64.img --disck-format qcow2 --container-format bare --public
+
+
+cirros이미지를 사용하여 인스턴스를 두개생성후
+서로 ping이 가는지 확인하고 유지 시켜두기
+
+cli 로 돌아와서 openstack server list로 ID확인
+openstack server show ID 로 현재 어느 노드에 배치되어있는지 확인
+> 각 한개씩 compute1,2에 배치
+
+live migration실행
+openstack server migrate 4eb892b7-481e-4bf5-91ba-507300e061a9 --live compute2 --block-migration
+공유 스토리지로 연결되어있는 경우에는 라이브마이그레이션이 정상적으로 동작하나
+공유스토리지가 없는 경우 디스크와 xml파일을 전체 다 옮겨야한다
+(기본 migration은 xml만 이동 --block-migration은 disk를 옮김)
+
+==사용자추가
+그룹(dev) > 사용자(devuser1, devuser2) using cli
+
+openstack gui페이지에서 사용자생성 > openstack cli사용불가
+cli에서 keystone을 복사해 수정하면 사용가능
+
+-새로운 프로젝트 생성
+openstack project create --domain default --description "신한은행 SOL 프로젝트" sol
+
+-새로운 사용자생성, 프롬프트를 열어서 사용자의 암호를 설정
+openstack user create --domain default --password-prompt dev1
+
+ -사용자를 sol이라는 프로젝트에 _member_롤로 추가
+ openstack role add --project sol --user dev1 _member_
+
+ ==Neutron(네트워크)
+
+ Neutron에서 제공하는 대표적인 서비스들
+
+ 1.VPN : 재택근무자가 외부에서 회사내부의 컨트롤러로 접속하기 위한 용도
+(SSLVPN, 사용자가 VPN GATEWAY에 접속)
+
+본사 지사간 연결 - IPSec VPN [site-to site VPN])
+
+
+ 2.firwall
+ 3.DHCP 
+ 4.LB 
+ 5.Switch(linux bridge , OPenVswitch), Router(Routing)
+- overlay 네트워크
+
+      linux bridge   vs openvswitch
+       L2 only                   L4
+                                        Routing , QoS, ACL
+                                        터널링(gre,vxlan)-> overlay 네트워크 만들 수 있다.
+                                        SDN 을 지원한다.
+
+
+  SDN은 스위치 내부에 있는 data plane/control plane 을 분리하여 운영할 수 있다.
+ data plane : MAC 테이블 처리 영역
+ control plane : 라우팅, QoS, ACL 등의 처리 가능 
+
+openstack 은 기본적으로 openvswitch 의 VxLAN 기술을 사용하여 터널링을 제공한다.
+여러 compute 노드는 VxLAN 을 이용한 터널링이 지원되므로 인스턴스의 이동(마이그레이션)이 자유롭다
+
+
+
+
+
+외부 네트워크 구성을 위한 설정과 연결
+1. openvswitch 기반의 브릿지 : br-ex
+eth0 이 br-ex 의 하나의 포트로 동작하도록 설정해 주어야 한다.
+eth0 이 현재는 L3 -> L2로 전환해야 한다
+
+해야할 일
+br-ex   생성(openvswitch기반)
+기존 eth0 은 br-ex 의 하나의 L2포트로 동작해야 한다.
+
+ [root@control network-scripts(keystone_admin)]# cat ifcfg-br-ex
+TYPE=OVSBridge
+BOOTPROTO=none
+NAME=br-ex
+DEVICE=br-ex
+DEVICETYPE=ovs
+ONBOOT=yes
+IPADDR=10.5.116.100
+PREFIX=8
+GATEWAY=10.0.0.1
+DNS1=8.8.8.8
+NM_CONTROLLED=no
+
+[root@control network-scripts(keystone_admin)]# cat ifcfg-eth0
+TYPE=OVSPort
+BOOTPROTO=none
+NAME=eth0
+DEVICE=eth0
+DEVICETYPE=ovs
+OVS_BRIDGE=br-ex
+ONBOOT=yes
+NM_CONTROLLED=no
+[root@control network-scripts(keystone_admin)]# systemctl restart network
+
+[확인]
+# ovs-vsctl show
+   [생략]
+    Bridge br-ex
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        Port phy-br-ex
+            Interface phy-br-ex
+                type: patch
+                options: {peer=int-br-ex}
+        Port br-ex
+            Interface br-ex
+                type: internal
+        Port "eth0"
+            Interface "eth0"
+
+
+    [생략]
+
+2. "1" 에서 생성된 br-ex 를 외부 연결용 브릿지로 지정하고 기 생성해 두었던 라우터와 연결하여
+
+  인터넷(10.0.0.1)--eth0(br-ex 브릿지)가상포트---ADMIN_R1---| 172.16.1.0/24
+ 
+외부네트워크 연결을 위해서는 eth0 가 extnet 이라는 physical network 이고 이 extnet 을 extnet:br-ex 형태로 매핑해야 한다. 
+
+-플레이버 생성
+openstack flavor create --id 6 --vcpus 1 --ram 1024 --disk 10 m1.xsmall
+openstack flavor create --id 7 --vcpus 2 --ram 1024 --disk 10 m1.xsmall2
+-외부네트워크 생성 및 서브넷 생성
+
+openstack network create --provider-physical-network extnet --provider-network-type flat --external ext_net
+
+openstack subnet create ext_net_subnet --network ext_net --subnet-range 10.5.116.0/8 --allocation-pool start=10.5.116.101,end=10.5.116.199 --gateway 10.0.0.1 --dns-nameserver 8.8.8.8 --no-dhcp
+
+openstack network set --external ext_net
+
+*overlay로 구성되었다 = vxlan을 통해 통신한다
+
+*오버레이 네트워크, 클라우드 환경에서 vlan을 사용할수없는이유
+
+1.vlan은 L3구간을 넘어갈수없으므로 두개이상의 인스턴스가 서로다른 지역의
+서버에 배치되어있다면 이를 하나의 네트워크로 묶을 수없다.
+
+2.vlan은 0~4095까지 4096개만 사용이가능 만약 이를 이용하여 오버레이 구성시
+4096명의 고객만을 유치할수있음
+
+3.VXLAN은 오버레이를 위한 터널링이 지원, 두개이상의 인스턴스가 서로 다른 지역의
+물리서버 ( compute node) 에 배치되어있다고 하더라도 하나의 네트워크로 묶을 수있다.
+VxLAN은 1600만개를 사용할수있으므로 다수의 고객을 유치할수있음
+
+
+*ML2플러그인
+오픈스택 내부에 flat,vxlan,vlan,gre등과 같은 다양한 네트워크 환경구성요소를
+서로간의 통신이 가능하도록 지원해주는 플러그인
+
+이를 통해 서로 다른 네트워크타입에 속해있는 인스턴스간 통신이 가능해진다.
+
+iscsi : ip를 이용한 원격방식의 scsi
+
+
+flavor 지정하기
+
+[root@control ~(keystone_admin)]# openstack flavor create --id 6 --vcpus 1 --ram 1024 --disk 10 m1.xsmall
+[root@control ~(keystone_admin)]# openstack flavor list
++----+-----------+-------+------+-----------+-------+-----------+
+| ID | Name      |   RAM | Disk | Ephemeral | VCPUs | Is Public |
++----+-----------+-------+------+-----------+-------+-----------+
+| 1  | m1.tiny   |   512 |    1 |         0 |     1 | True      |
+| 2  | m1.small  |  2048 |   20 |         0 |     1 | True      |
+| 3  | m1.medium |  4096 |   40 |         0 |     2 | True      |
+| 4  | m1.large  |  8192 |   80 |         0 |     4 | True      |
+| 5  | m1.xlarge | 16384 |  160 |         0 |     8 | True      |
+| 6  | m1.xsmall |  1024 |   10 |         0 |     1 | True      |
++----+-----------+-------+------+-----------+-------+-----------+
+[root@control ~(keystone_admin)]#
+
+
+VNC설정
+
+   공인IP:59XX -----------> 10.5.1.X:5900
+
+    국정완 : 5901
+        세흥 :5902
+        준혁 :
+
+xsmall 로 인스턴스 만든 뒤, ssh 인증할 때 계정은 
+ubuntu 를 입력하면 사용자의 private 키를 서버의 public 키와 매칭시킨 뒤 정상적인 키라면 연결에 성공합니다.
+
+설정에 문제가 없는데 연결이 잘 안되는 분들은 xsmall 로 만든 인스턴스를 삭제하고
+small 로 해서 다시 만들어 보세요~ 잘 되네요
+
+인증에 성공하면 
+sudo passwd root
+test123
+test123
+su root
+apt-get install -y apache2
+해서 웹 서버 설치하고 외부에서 floating ip 로 웹 접속 해 보세요!
+
+
+CLI 로 인스턴스 생성하기
+[root@control ~(keystone_admin)]# openstack server create --flavor m1.small --image UBUNTU1804 --security-group WEBSRV_SG --key-name ubuntu1804 --nic net-id=ca961c3b-968e-476e-8d55-5b6c38bc585a WEBSRV2
+
+-임시로 floating ip 를 2번째 인스턴스에 할당
+-외부에서 ssh 로 접속하여 apache2 설치한 뒤, 간단히 index.html 파일을 수정
+-두 우분투 서버는 sudo passwd root 로 루트 패스워드 미리 지정해 두고
+- 웹서버 설치가 끝나면 둘 다 floating ip 는 해제 한뒤, 서버끼리 서로 
+   curl 을 이용하여 상대의 웹서버 동작 상태를 확인한다.
+
+인스턴스 (qcow2 -> centos7)
+- virt-customize 를 이용하여 실행시 자동으로 docker 가 설치되어 있어야 한다.
+- 도커 버전은 docker-ce  최신 버전
+- httpd 가 설치되어 있어야 한다.  
+- size 는 지정하지 말것!!!
+
+
+wget http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-2003.qcow2.xz
+xz -d CentOS-7-x86_64-GenericCloud-2003.qcow2.xz
+
+
+이미지 생성 -> ftp 에 업로드 -> 스냅샷(오픈스택 설치완료:eth0,eth1) 
+ -> answer.txt 파일 이용하여 heat 설치
+ -> 외부 네트워크 설정 (br-ex)
+ -> heat 의 yml 파일 작성
+ -> 만들어둔 이미지 테스트 하기
+ -> heat 파일 이용하여 배포하기
+-------------------------- 
+오후 : GCP 설정 
+구글 클라우드에 도커 클러스터 환경 구현(kubernetes 이용)
+1. gcp
+2. 로컬에 설치(manager,worker)
+
+ k8s 는 외부 노출이 불가능하다. 노출하려면 service(네트워크 서비스) 를 이용해야 한다.
+- cluster ip
+- nodeport
+- LB
+
+
+ansible + openstack
+ansible + docker
+ansible + aws | gcp 
+
+"오케스트레이션 tool" -> 한번에 인프라와 인스턴스 | container를 생성 및 배포 하고 이를 연결하여  즉시 서비스가 가능한 상태를 만들 수 있는 것. 
+생성된 후에는 인스턴스의 배포나 인프라의 변경이 수월하다. 
+
+-------------------------------------------------------------
+개인프로젝트 : 
+
+controller : kubernetes - master node (TOKEN 발행)
+                                                   worker node (토큰 삽입)
+
+
+설치가 마무리되면 외부 연결을 위한 br-ex 설정을 진행해야 한다.
+1. 미리 설치되어 있는 라우터와 두개의 네트워크 삭제(라우터를 먼저 삭제해야 함) - 관리에서 
+2. 외부 네트워크(br-ex) 설정
+3. 내부 네트워크 설정(private01 : 172.16.1.0/24)
+4. 라우터 생성 하면서 외부네트워크(게이트웨이 설정)와 연결하고 인터페이스에서 내부 네트워크 역시 추가해 주어야 한다.
+
+              br-ex |----Router-----| private01
+
+5. 인우씨 서버에서 WINscp, powershell  이용하여 이미지 다운로드
+6. 해당 이미지로 배포테스트(인스턴스 설치 된 뒤에 웹서버 동작상태, 도커 실행 상태 확인)
+
+------------ heat_test.txt 파일---------------------
+heat_template_version: 2015-04-30       
+                                          
+resources:                              
+  instance:                             
+    type: OS::Nova::Server              
+    properties:                         
+      flavor: m1.small                
+      image: ubuntu1804
+      networks:                         
+        - network: private01              
+      key_name: test
+      security_groups:
+        - default
+---------복잡한 환경 구성의 예----------------------------------
+heat_template_version: 2015-04-30
+
+parameters:
+    key_name:
+        type: string
+        label: Key Name
+        description: SSH key to be used for all instances
+        default: your_key
+    image_id:
+        type: string
+        label: Image ID
+        description: Image to be used. Check all available options in Horizon dashboard or by using openstack image list command.
+        default: Ubuntu 18.04 LTS (19.18)
+    private_net_id:
+        type: string
+        description: ID/Name of private network
+        default: private_network_0XXXX
+    eodata_net_id:
+        type: string
+        description: ID/Name of eodata network
+        default: eodata
+
+
+
+resources:
+        Group_of_VMs:
+                type: OS::Heat::ResourceGroup
+                properties:
+                        count: 2
+                        resource_def:
+                                type: OS::Nova::Server
+                                properties:
+                                        name: my_vm%index%
+                                        flavor: eo1.xsmall
+                                        image: { get_param: image_id }
+                                        networks:
+                                                - network: { get_param: private_net_id }
+                                                - network: { get_param: eodata_net_id }
+                                        key_name: { get_param: key_name }
+                                        security_groups:
+                                                - allow_ping_ssh_rdp
+                                                - default
+
+        VOL_FAQ:
+                type: OS::Cinder::Volume
+                properties:
+                        name: vol
+                        size: 20
+                        image : { get_param: image_id }
+
+
+        With_volume:
+                type: OS::Nova::Server
+                properties:
+                        flavor: eo1.xsmall
+                        block_device_mapping: [{"volume_size": 20, "volume_id": { get_resource: VOL_FAQ }, "delete_on_termination": False, "device_name": "/dev/vda" }]
+                        networks:
+                                 - network: { get_param: private_net_id }
+                                 - network: { get_param: eodata_net_id }
+                        key_name: { get_param: key_name }
+                        security_groups:
+                                 - allow_ping_ssh_rdp
+                                 - default
+                        image : { get_param: image_id }
+
+outputs:
+        SERVER_DETAILS:
+                description: Shows details of all virtual servers.
+                value: { get_attr: [ Group_of_VMs, show ] }     
+ 
+
+
+
+------------

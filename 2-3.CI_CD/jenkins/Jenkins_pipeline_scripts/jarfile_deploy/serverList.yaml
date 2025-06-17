@@ -1,0 +1,24 @@
+serverList:
+  - name: deploy_server1
+    host: 10.0.0.100
+    jarDir:
+      - sourceId: server1_source_1
+        ProcName: server1_proc1
+        source_file: server1_testfile_1.txt
+        jarPath: /home/cicd_test/server1_proc1/server1_testfile_1.txt
+        shPath: /home/cicd_test/server1_proc1/server1_run1.sh
+
+      - sourceId: server1_source_2
+        ProcName: server1_proc2
+        source_file: server1_testfile_2.txt
+        jarPath: /home/cicd_test/server1_proc2/server1_testfile_2.txt
+        shPath: /home/cicd_test/server1_proc2/server1_run2.sh        
+  
+  - name: deploy_server2
+    host: 10.0.0.200
+    jarDir:
+      - sourceId: server2_source_1
+        ProcName: server2_proc1
+        source_file: server2_testfile_1.txt
+        jarPath: /home/cicd_test/server2_proc1/server2_testfile_1.txt
+        shPath: /home/cicd_test/server2_proc1/server2_run1.sh

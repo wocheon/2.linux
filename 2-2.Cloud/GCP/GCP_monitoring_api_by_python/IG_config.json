@@ -1,0 +1,29 @@
+{
+    "project_id": "gcp-in-ca",
+    "start_time_kst": "2025-04-01T10:00:00",
+    "end_time_kst": "2025-04-01T12:00:00",
+    "start_time_offset": 0,
+    "end_time_offset": 0,
+    "output_prefix": "autoscaler_report",
+    "metrics": [
+      {
+        "metric_type": "compute.googleapis.com/instance_group/size",
+        "filter_template": "metric.type=\"compute.googleapis.com/instance_group/size\" AND resource.label.\"instance_group_name\"=\"[instance_group_name]\"",
+        "label_key": "instance_group_name",
+        "alias": "group_size"
+      },
+      {
+        "metric_type": "autoscaler.googleapis.com/current_utilization",
+        "filter_template": "metric.type=\"autoscaler.googleapis.com/current_utilization\" AND metric.labels.metric_type = \"cpu\" AND resource.label.\"instance_group_name\"=\"[instance_group_name]\"",
+        "label_key": "instance_group_manager_name",
+        "alias": "utilization"
+      },
+      {
+        "metric_type": "autoscaler.googleapis.com/capacity",
+        "filter_template": "metric.type=\"autoscaler.googleapis.com/capacity\" AND metric.labels.metric_type = \"cpu\" AND resource.label.\"instance_group_name\"=\"[instance_group_name]\"",
+        "label_key": "instance_group_manager_name",
+        "alias": "capacity"
+      }      
+    ]
+  }
+  

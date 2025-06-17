@@ -1,0 +1,23 @@
+*로컬 PC에서 SSH를 통해서 GCP VM의 외부주소로 접속하는 방법 
+
+[LOCAL PC ]
+-cmd 혹은 powershell 에서 ssh 키를 생성할 위치로 이동
+cd .ssh
+
+-다음 명령어를 통해 ssh 키 생성 
+ssh-keygen -t rsa -f .ssh/GCP_KEY -c [ GCP에서 접속중인 GMAIL 계정 ]
+*옵션은 전부 엔터로 처리
+
+[GCP]
+- 생성된 키중 공개키(.pub) 를 GCP 메타데이터 > SSH키 혹은 VM 생성 후에 메타데이터에 입력 
+- 방화벽 규칙에서 22포트 연결을 허용 (0.0.0.0/0 혹은 주소 범위를 지정)
+
+
+*mobaxterm 접속 
+session  > Advanced SSH settings의 Use Private Key 체크 
+           개인키 파일 선택 후 접속 확인.
+
+*putty 
+puttygen 으로 개인키 파일 불러온뒤 save private key 로 ppk 파일 생성 (genrate아님)
+만들어진 ppk 파일을 Connection > Auth > Credentials 에서 private key로 불러온뒤 접속확인.
+

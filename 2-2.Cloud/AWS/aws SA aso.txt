@@ -1,0 +1,546 @@
+-기본 용어
+
+가용성 : 서비스가 다운되지않고 정상적으로 유지되는 시간
+
+SSL : 서버와 클라이언트의 인증을 하는데 사용됨
+ex) HTTPS
+
+프로비저닝 : 사용자의 요구에 맞게 시스템 자원을 할당,배치,배포해두었다가
+필요시 시스템을 즉시 사용할수있는 상태로 미리 준비해 두는 것
+
+워크로드 : 작업이 주는 스트레스의 양, 시스템에 걸리는 작업량
+          시스템의 사용자 및 어플리케이션들이 발생시키는 전체 처리요구량
+        ex) 메모리 워크로드, CPU 워크로드 등등
+
+REST: Representational State Transfer 
+    자원을 이름으로 구분하여 해당자원의 상태를 주고받는 모든것을 의미
+    자원의 표현에의한 상태 전달, 네트워크상에서 Client 와 Server사이의 통신방식 중 하나
+
+    자원의 표현
+        자원 : 해당 소프트웨어가 관리하는 모든것
+                ex) 문서, 그림 데이터 등 
+        자원의 표현 : 자원을 표현하기 위한 이름
+    상태전달
+    : 데이터가 요청되어지는 시점에서의 자원의 상태를 전달
+      JSON/XML을 통해 데이터를 주고 받는다 
+
+    HTTP URI(Uniform Resource Identifier)를 통해 자원을 명시하고
+    HTTP Method(POST,GET,PUT,DELETE)를 통해 해당 자원에 대한 CRUD Operation을 적용하는것을 의미
+
+    *CRUD Operation:
+    Create : 생성(POST)
+    Read : 조회(GET)
+    Update: 수정(PUT)
+    DELETE: 삭제(DELETE)
+    HEAD: header 정보조회(HEAD)
+
+    REST의 구성요소:
+    1. 자원 :URI 
+            모든자원에는 고유한 ID존재
+
+            자원을 구별하는 ID > HTTP URI 
+            
+            Client는 URI를 통해 자원을 지정하고 
+            해당자원의 상태에 대한 조작을 Sever에 요청
+
+
+    2. 행위: HTTP Method
+            HTTP프로토콜의 Method사용
+            ex) GET, POST, PUT, DELETE 
+
+    3. 표현: Representation of Resource
+            Client가 자원의 상태에 대한 조작을 요청하면
+            Server는 이에 적절한 응답을 보낸다 
+
+            REST에서 하나의 자원은 JSON,XML,TEXT,RSS등 여러 형태의 Representation으로
+            나타날수있음
+
+            일반적으로 JSON/XML을 사용 
+    
+    REST의 특징:
+
+    1. Sever-Client구조 : 자원이 있는쪽=Server, 자원을 요청하는쪽=Client
+    
+    2. Stateless(무상태) : Client의 Context를 Server에 저장하지 않음
+                           Server는 각각의 요청을 완전히 별개로 인식하고 처리
+    
+    3. Cacheable(캐시처리 가능) : 웹 표준 HTTP 프로토콜 사용 > 웹에서 사용하는 기존인프라 활용가능
+                                대량의 요청을 효율적으로 처리하기위해 캐시요구
+                                캐시 사용을 통해 응답시간 빨라짐 , 서버의 성능 자원이용률 향상 가능
+
+    4. Layered System(계층화) : Client는 REST API Server만 호출
+                                REST Server는 다중계층으로 구성 가능
+                                PROXY, Gateway와 같은 네트워크기반 중간매체 사용 가능
+
+    5. Code-On-Demand(Optional) : Server로부터 스크립트를 받아 Client에서 실행
+                                    반드시 충족할 필요는 X
+    
+    6. Uniform Interface(인터페이스 일관성) : URI로 지정한 Resource에 대한 조작을 통일되고 한정적 인터페이스로 수행
+                                            HTTP 표준 프로토콜에 따르는 모든 플랫폼에서 사용 가능(특정언어/기술에 종속 x)
+
+
+    REST API : REST를 기반으로 서비스 API를 구현한것
+
+    RESTful : REST라는 아키텍쳐를 구현하는 웹서비스를 나타내기위해 사용되는 용어
+                ex) REST API를 제공하는 웹서비스 > 'RESTful하다'
+            
+
+--- 기본 서비스 목록 ---
+
+
+
+Amazon Resource Name (ARN)
+: AWS Resource를 고유하게 식별하기위해 부여되는 이름
+
+
+- 컴퓨팅 관련 서비스 
+    - Amazon EC2 ( Amazon Elastic Compute Cloud )
+    : 종량제 형태로 과금되는 가상 서버 기능
+
+    - Amazon Elastic Container Service (ECS)
+    : Docker를 운용하는 서비스, fargate/ec2/external(외부 인스턴스)로 구분하여 서비스를 실행가능
+
+
+    -Amazon Elastic Kubernetes Service (EKS)
+    : Kubernetes를 운용하는 서비스
+     
+        AWS fargate
+        : 컨테이너에 적합한 서버리스 컴퓨팅 엔진. ECS, EKS에서 작동함
+        서버를 프로비저닝하고 관리할 필요가 없음
+
+        external
+        : 온프레미스 상에 존재하는 Bare metal and Virtual Machine
+
+    -Amazon Elastic Container Registry 
+    : Docker image registry 서비스  
+
+    -AWS Elastic Beanstalk
+    : .NET/PHP/Python/Ruby/Node.js등에서 개발한 앱을
+    자동으로 AWS에 배포 할수 있도록 해주는 서비스 
+
+    -AutoScaling 
+    : CPU 사용률 등 정해진 조건에 따라 EC2인스턴스를 자동적으로 증감시키는 서비스 
+
+    -Elastic Load Balnacer (ELB)
+    : 두개 이상의 EC2인스턴스로 부하 분산을 제공하는 서비스 
+
+
+- DB 관련 서비스 
+    -Amazon RDS 
+    : 관계형 데이터베이스를 구축 및 운용
+    MySQL/Oracle/SQLServer/PostgreSQL/Amazon Aurora 등의 엔진 사용가능
+
+    - AWS Database Migration Service
+    : 최소한의 정지 시간에 DB를 Migration할 수 있는 서비스 
+    ex) 온프레미스 to AWS 
+
+    -Amazon DYnamoDB
+    :모든 규모에서 일관된 한자리수의 밀리 초 응답시간을 필요로하는 모든 어플리케이션에 대해
+    빠른 성능과 유연함을 제공하는 완전관리형 NoSQL 데이터베이스 서비스 
+
+    -Amazon ElasticCache
+    : 클라우드에서 메모리의 캐시관리가 가능한 서비스
+    고속의 메모리 내 캐시로부터 정보를 취득하여 Web Application의 속도 향상 
+
+    -Amazon Redshift
+    : 빅데이터를 위한 데이터 웨어하우스. 페타바이트 규모의 데이터를 분석할수있음
+
+- 네트워크 관련 서비스 
+
+    -Amazon Virtual Private Cloud (VPC)
+    :AWS내에서 사설 네트워크를 구축하기 위한 서비스 
+
+    -AWS Direct Connect
+    : 온프레미스에서 AWS로 전용네트워크를 설정할수있는 클라우드 솔루션
+
+    -AWS Route53
+    : AWS에서 제공하느 DNS 서비스 
+
+---
+-AWS Load Balnacer
+
+Application Load Balnacer : HTTP/HTTPS 
+
+Network Load Balnacer : TCP/TLS/UDP 
+
+Gateway Load Balnacer : IP 
+
+Classic Load Balnacer : HTTP/HTTPS 및 TCP 
+
+-AWS WAF (Web Application Firewall)
+: Http 프로토콜 수준에서 발생하는 다양한 공격행위로부터
+웹사이트나 웹 어플리케이션을 보호하는 웹 어플리케이션 방화벽
+
+---
+-AWS 스토리지 관련 서비스
+
+1.Amazon S3(Amazon Simple Storage Service)
+다중화된 데이터 스토리지 서비스로
+여러 파일들을 보관하는 용도로 사용이가능하고, 정적 웹서버로서 동작도 가능함
+
+2.Amazon CloudFront
+전 세계에 콘텐츠를 전송하기위한 네트워크서비스
+동영상등의 콘텐츠를 Edge Location이라 불리는 거점에 자동전달하고,
+이용자로부터 가장 가까운 Edge Locationd에서 콘텐츠를 전송하는 방식
+(cache서버라 생각하면 된다.)
+
+Geo Restriction(지리적 제한)을 사용하면 특정국가의 사용자의 콘텐츠에 대한 접근 및 제한을
+설정할수있음  (화이트 리스트/블랙리스트를 구성하여 동작)
+
+3. Amazon EBS(Amazon Elastic Block Store)
+Amazon EC2의 데이터를 보관하는 스토리지 서비스 
+    
+    -Amazon EBS 볼륨 유형
+    SSD (Solid-State Drive) : 작은 I/O 크기의 읽기/쓰기 작업을 자주처리하는 경우 적합 주요 성능특성=IOPS
+        - 범용 SSD (gp3,gp2) : 가격과 성능간의 균형을 제공
+        IOPS :
+            gp2 : 1500/3000 (지정 불가능)
+            gp3 : 3000~16000 (지정 가능) 
+
+        볼륨크기 : 1GiB ~ 16TiB 
+        Amazon EBS 다중연결 지원 x
+        부트볼륨 지원
+        ex) 지연시간이 짧은 대화형 앱, 개발 및 테스트 환경
+
+        - 프로비저닝된 IOPS SSD (io2, io1)
+        : 지연시간이 짧거나 처리량이 많은 환경에 적합. 비교적 고성능
+        IOPS: 
+            io1 : 100~ 64000 (지정 가능)
+            io2 : 3000~64000 (지정가능)
+            
+*IOPS? >  컴퓨터 저장장치 벤치마크에 사용되는 측정단위 
+
+        볼륨크기 : 4GiB ~ 16GiB (io2, io1) 
+        Amazon EBS 다중연결 지원 
+        부트볼륨 지원
+
+    HDD (Hard Disk Drive) : 대규모 스트리밍 환경에 최적화됨. 주요성능특성=처리량
+        처리량에 최적화된 HDD (st1)
+        : 자주 엑세스하는 처리량 집약적 환경에 적합한 저비용 HDD 
+        ex) 빅데이터, 데이터웨어하우스, 로그처리 
+        볼륨당 최대 IOPS : 500
+        볼륨크기 : 125GiB~16TiB
+        Amazon EBS 다중연결 지원 x
+        부트볼륨 지원 x 
+
+        Cold HDD (sc1) 
+        : 자주 엑세스하지 않는 환경에 적합한 가장 저렴한 HDD 
+        ex) 스토리지 비용이 최대한 낮아야하는 시나리오
+        볼륨당 최대 IOPS : 250
+        볼륨크기 : 125GiB~16TiB
+        Amazon EBS 다중연결 지원 x
+        부트볼륨 지원 x 
+
+    이전세대 : 데이터를 자주 엑세스 하지않으며, 성능이 중요하지않은 소규모 데이터세트가 있는 환경에 적합, 가격 저렴
+        Magnetic
+        : 데이터에 자주엑세스하지 않는 환경에 사용, 현재 볼륨 유형 사용을 권장
+        볼륨당 최대 IOPS : 40~200
+        볼륨크기 : 1GiB~1TiB
+        부트볼륨 지원 
+
+4. Amazon Elastic File system
+Amazon EC2의 공유파일 저장 서비스
+파일의 추가/삭제에 따라 자동으로 용량을 확장/축소하는 스토리지 
+
+5. Amazon Glacier
+저렴한가격으로 이용가능한 스토리지 서비스, 백업/아카이브용도로 사용됨
+사용빈도는 낮으나 장기보존이 필요한 데이터에 이용함
+
+6. AWS Import/Export Snowball
+페타바이트급 대용량 데이터 전송 서비스 
+데이터센터의 이전, 재해시 데이터 전환등에 사용됨
+
+7. AWS Storage gateway
+온프레미스 환경과 AWS를 접속하는 스토리지 게이트웨이
+(Storage gateway)
+
+
+---
+-S3 스토리지 클래스
+
+-최소 3개의 가용영역(Ability Zone)에 데이터를 저장
+
+1.Amazon S3 Standard : 표준
+
+2.Amazon S3 Intelligent-Tiering (S3 Intelligent-Tiering)
+: 알수없거나 별화하는 엑세스,
+엑세스 패턴이 변화하는 경우 4개의 엑세스 티어간 객체를 이동하여
+자동 비용절감효과를 제공
+
+처음 저장되는 개체는 Frequent Access에 저장하고,
+엑세스 패턴을 모니터링한뒤 30일 연속 엑세스되지않은 객체는 
+Infrequent Access계층으로 이동함
+(90일이상 > Archive Access 180일 이상 > Deep Archive)
+
+이후 다시 엑세스하면 Frequent Access로 이동
+
+3.Amazon S3 Standard-Infrequent Access(S3 Standard-IA)
+:빈번하지 않은 엑세스. 자주엑세스하지 않지만
+ 필요할때 빠르게 엑세스해야 하는 데이터에 적합.
+
+GB당 스토리지요금 및 GB 당 검색요금으로 비용부과
+
+4.Amazon S3 One Zone-Infrequent Access(S3 One Zone-IA)
+:빈번하지 않은 엑세스. 자주 엑세스하지않지만
+필요시 빠르게 엑세스해야하는 데이터에 적합.
+
+최소 3개의 가용영역에 데이터를 저장하는 다른 스토리지 클래스와 달리
+단일 AZ에 데이터를 저장하며, S3 Standard-IA 보다 20% 비용감축가능
+
+5. Amazon S3 Glacier(S3 Glacier)
+: 아카이브. 데이터 보관을 위한 안전하고 내구력있는 저렴한 스토리지
+비용을 낮게 유지하므로, 검색시간이 몇분 ~ 몇시간(세가지 옵션 존재)
+
+장기 아카이브에 이상적
+
+6. Amazon S3 Glacier Deep Archive (S3 Glacier Deep Archive)
+가장 저렴한 비용의 스토리지 클래스, 1년에 한두번정도 엑세스 할수있는
+데이터의 장기보관을 지원,
+ 7-10년이상 데이터세트를 보관하는 고객을 위해 설계됨
+
+자기 테이프 시스템의 대안
+
+3개의 분산된 가용영역에 복제되어 저장, 12시간 이내의 검색시간
+
+7. S3 OutPost 
+온프레미스 AWS Outposts 환경에 객체스토리지 제공
+S3 API를 사용하며 Outposts의 여러 디바이스와 서버에 이중화된 방식으로 저장
+
+-AWS Outpost
+일관된 하이브리드 환경을 위해 동일한 AWS인프라, 서비스 API및 도구를
+모든 데이터 센터, 코로케이션공간, 온프레미스 시설에 제공하는 완전관리형 서비스
+
+Amazon S3 Transfer Acceleration
+: 클라이언트와 S3 버킷간의 장거리 파일 전송을 빠르고 쉽고 안전하게 할수 있는 기능
+Amazon CloudFront에서 전세계에 분산된 Edge Location을 활용함 
+
+S3 버전관리
+: 한 버킷에 여러 버전의 객체를 저장하고 실수로 삭제되거나 덮어쓰기된 객체를 복원가능
+
+---
+
+-VPC 간 연결하기
+
+1.ClassicLink : 같은 리전 내의 해당계정의 VPC에 있는
+Ec2-Classic 인스턴스 연결 가능
+
+2.PrivateLink : 퍼블릭 인터넷에 트래픽을 노출하지않고 
+VPC, AWS서비스 및 온프레미스 네트워크 간 비공개 연결을 제공
+
+3. AWS Direct Connect :
+ 온프레미스에서 AWS로 전용네트워크를 설정할수있는 클라우드 솔루션
+
+4. VPC Peering : 프라이빗 IPv4/IPv6주소를 사용하여
+두 VPc간에 트래픽을 라우팅할수있도록 하는 두 VPC사이의 네트워킹 연결
+
+사용자의 자체 VPC 또는 다른 AWS계정의 VPC간 피어링 연결 가능
+(VPC는 다른 리전에 존재할수있음)
+
+5. AWS Resource Access manager 
+AWS계정, AWS조직의 조직 또는 조직단위내 지원되는 리소스 유형에대한
+IAM 역할 및 IAM 사용자와 리소스를 공유할수있음
+ex) gateway,subnet
+
+---
+-재해복구시스템 (Disaster Recovery system)
+
+RPO(Recovery Point Objective)
+: 서버 혹은 시스템의 운영중 장애가 발생하여,  서비스가 불가한경우
+어느시점으로 시스템을 되돌리거나 정보의 복구가 되어야하는지 결정하는 지표
+(데이터 유실을 감수할 수 있는 최대 시점)
+
+RTO(Recovery Time Objective)
+:어떤 서버 혹은 서비스에 장애가 발생하는 경우 장애복구를 수행하고
+서비스가 정상적으로 다시 복구될때까지 걸리는 다운타임
+(데이터 복구시에 걸리는 최소 시간)
+
+
+---
+-KRADL 서비스
+
+AWS만이 가지고있는 차별화된 요소들을 뜻함
+
+K: Amazon Kinesis
+실시간 스트리밍 데이터를 쉽게 수집 처리,분석할수있음
+여러가지 실시간 데이터를 수집하고 이러한 데이터를 사용하여
+실시간 어플리케이션을 구축하는데 사용이가능함
+
+크게 4가지로 기능 분류가 가능함
+    1. Kinesis Video Streams 
+    : AWS를 통해 비디오를 쉽고 안전하게 스트리밍 가능 
+    
+    2. Kinesis Data Streams
+    : 실시간 데이터 스트리밍 서비스, 수십만개의 소스에서 초당 GB의 데이터를 연속적으로 캡쳐
+
+    3. Kinesis Data Firehose
+    : 기존 인텔리전스 도구를 사용하여 실시간분석을 위한 데이터스트림을 캡쳐 및 변환하여
+    AWS 데이터 스토어로 로드가능
+
+    4. Kinesis Data Analytics
+    : SQL 또는 Apache Flink를 통해 실시간으로 데이터를 처리할수 있는 기능
+
+
+R: Amazon Redshift
+빅데이터를 위한 데이터 웨어하우스. 페타바이트 규모의 데이터를 분석할수있음
+
+표준 SQL과 BI(비즈니스 인텔리전스)도구를 사용해 모든 데이터를 간단하고
+비용 효율적으로 분석할수 있는 빠르고 완전히 관리되는 데이터 웨어하우스
+
+A: Amazon Aurora
+고성능 데이터베이스의 속도와 가용성, 오픈소스 데이터베이스의 단순성과 비용효율성을 
+결합하여 만들어진 MYSQL과 PostgreSQL 호환 관계형 데이테베이스 엔진
+기존 소스를 AWS에 맞추어 변경하였음
+
+D: Amazon DYnamoDB
+모든 규모에서 일관된 한자리수의 밀리 초 응답시간을 필요로하는 모든 어플리케이션에 대해
+빠른 성능과 유연함을 제공하는 완전관리형 NoSQL 데이터베이스 서비스
+
+RDS와 달리 비정형 데이터를 쉽게 취급가능
+
+L: Amazon Lamda
+클라이언트 리퀘스트 발생시점에 임의의 프로그램을 구동시키는
+이벤트 드리븐(Event Driven)형태의 서비스
+서버를 프로비저닝하거나 관리하지않고도 코드를 실행할수있음
+EC2처럼 상시 가동되는 서비스가 아니기때문에 운용비용이 저렴함
+
+---------------------
+AWS Glue 
+분석을 위해 손쉽게 데이터를 준비하고 로드할수있게 지원하는
+완전관리형 ETL(추출 변환 및 로드) 서비스 
+
+
+Amazon EMR
+호스트 형태의 관리형 Hadoop 프레임워크 
+빅데이터 프레임워크 실행을 간소화하는 관리형 클러스터 플랫폼
+
+AWS Config 
+AWS 리소스 구성을 측정/감사/평가 할수있는 서비스. 
+리소스구성을 지속적으로 모니터링 및 기록하고, 
+원하는 구성을 기준을 기록된 구성을 자동으로 평가
+
+AWS Transit Gateway
+중앙허브를 통해 VPC와 온프레미스 네트워크를 연결
+복잡한 피어링 관계를 제거하여 네트워크를 간소화
+클라우드 라우터 역할을 하므로 새로운 연결은 한번만 추가하면 됨 
+
+AWS Certificate Manager 
+AWs 서비스 및 연결된 내부리소스에 사용할 공인 및 사설 SSL/TSL 인증서를
+쉽게 프로비저닝, 관리 및 배포 할수 있도록 지원하는 서비스 
+
+AWS Datasync
+온프레미스 스토리지 시스템과 AWS 스토리지 서비스 간, 
+그리고 여러 AWS 스토리지 서비스 간의 데이터 이동을 간소화, 자동화 및 가속화하는
+온라인 데이터 전송 서비스
+
+Amazon Athena
+표준 SQL을 사용해 Amazon S3에 저장된 데이터를 간편하게 분석할 수 있는
+대화식 쿼리 서비스. 서버리스로 운용되며 실행한 쿼리에 대해서만 비용지불
+
+배치그룹
+    1. 클러스터 : 인스턴스를 가용영역 안에 서로 근접하게 패킹함
+                이를 통해 결합된 노드간 통신에 필요한 낮은 지연시간의 네트워크 성능 달성가능
+
+    2. 파티션 : 인스턴스를 논리적 파티션에 분산하여, 한 파티션에 있는 인스턴스 그룹이 
+                다른 파티션의 인스턴스 그룹과 기본하드웨어 공유 x
+                사용예시) Hadoop, Cassandra, Kafka
+
+    3. 분산 : 소규모의 인스턴스그룹을 다른 기본 하드웨어로 분산하여 상호 관련 오류를 감소
+
+
+Amazon Simple Queue Service (SQS)
+: 마이크로 서비스, 분산시스템 및 서버리스 어플리케이션을 쉽게 분리/확장 할수있도록
+지원하는 완전관리형 메세지 대기열 서비스
+
+2가지 메세지 대기열을 제공 
+    1. 표준대기열 : 최대 처리량, 최선 노력순서, 최소 1회 전달
+
+    2. SQS FIFO대기열 : 메세지가 전송된 정확한 순서대로 정확히 한번 처리
+
+
+Amazon Database Migration Service (DMS)
+: 데이터베이스를 AWS로 안전하게 Migration하도록 지원하는 서비스
+
+Migration중 소스 데이터베이스가 변함없이 운영되어 해당 데이터베이스를 
+사용하는 애플리케이션의 가동 중지 시간을 최소화 
+
+동종 DB엔진으로의 Migration(ex : Oracle to Oracle 등)뿐 아니라
+이종 DB엔진으로의 Migration(ex : Oracle to MSSQL 등) 또한 지원함
+
+Amazon Simple Notification Service (SNS)
+: 애플리케이션 간 (A2A) 및 어플리케이션과 사용자간 (A2P) 통신 모두를 위한
+완전관리형 메세징 서비스 
+
+Amazon Key Management Service (KMS)
+: 암호화키를 생성 및 관리하고 다양한 AWS서비스와 Application의 사용을 제어할수 있도록 해주는 서비스 
+FIPS 140-2 에 따라 검증 혹은 검증과정에있는 하드웨어 보안모듈을 사용해
+키를 보호하는 안전하고 복원력있는 서비스 
+
+Amazon DYnamoDB Accelerator (DAX)
+: DYnamoDB사용 환경에서 마이크로초 단위의 응답시간이 필요한경우 사용가능
+최종적 일관된 데이터를 엑세스할 때 빠른 응답시간제공 
+
+특징 
+    1. 읽기 워크로드의 응답시간을 한자리수 밀리초 > 마이크로초 
+    2. DYnamoDB와 API호환되는 관리형 서비스를 제공하여 운영 및 어플리케이션 복잡성을 감소
+        > 기존 어플리케이션에서 사용하기위한 최소한의 기능변경만 필요
+    3. 읽기 중심의 워크로드의 경우 읽기 용량 단위를 오버 프로비저닝 해야하는 필요성을 감소
+        또한 높은 처리량을 제공하고 잠재적 운영비용을 절감
+        ex) 개별키를 반복적으로 읽어야하는 어플리케이션 
+
+    4. 서버측 암호화 지원( 유휴시 암호화를 통해 디스크에 유지되는 데이터 암호화 )
+
+
+
+-인스턴스 구매 옵션
+1.On-Demand Instances
+: 가장 기본이 되는 요금제, 정기적인 약정이 아닌 인스턴스가 running상태인 시간(초)에 대해서만 비용을 지불
+
+2.Spot Instances
+:온디멘드보다 저렴한 비용으로 사용가능한 미사용 EC2인스턴스 (약 90%)
+ 자신이 사용할 인스턴스 상품을 입찰하여 사용 (AWS 클라우드에서 미사용 EC2용량을 활용하기위해서 만듦)
+시작 및 종료시간이 자유로운 APP, 가격을 매우 저렴하게 EC2를 사용하고 싶은 경우 사용함
+
+ ex) 인스턴스 1을 시간당 100원에 입찰해서 사용을 원함
+    하지만 현재 인스턴스1의 요금은 시간당 120원이므로 사용불가
+
+    다음달 가격이 시간당 80원으로 인하되면 사용이가능해짐
+
+    그 다음달에는 다시 시간당 110원으로 인상되고 
+    내가 세팅한 가격보다 인스턴스의 입찰가가 높으므로 자동 종료됨
+
+
+3.Reserved Instances
+: 선납금을 납부하는 방식, 온디멘드 인스턴스보다 최대 75% 저렴하게 이용이 가능함
+특정 가용영역에 지정하면 용량 예약이 제공되며, 필요시 예약한 인스턴스를 시작가능
+ 
+    - Standard Reserved Instances (예약 인스턴스)
+     : 가장 큰 할인률을 가지며, 사용량이 꾸준한 경우에 적합함
+
+    - Scheduled Reserved Instances (정기 인스턴스)
+     : 예약한 시간 범위 내에서 인스턴스를 시작 가능
+
+    - Convertible Reserved Instances
+    :  Reserved Instances의 속성을 변경가능 (교체 후 예약인스턴스 금액이 크거나 같은 경우에만)
+      표준 RI와 마찬가지로 사용량이 꾸준한 경우 적합함
+ 
+Amazon Cognito
+: 웹 및 모바일 앱에 대한 인증/권한부여/사용자관리 제공 
+사용자는 사용자 이름과 암호를 이용해 직접 로그인하거나 
+Facebook,Amazon,Google 과 Apple과 같은 타사를 통해 로그인이 가능함 
+
+주요 구성요소
+    - 사용자풀 : 앱 사용자의 가입 및 로그인 옵션을 제공하는 사용자 디렉토리
+
+    - 자격증명풀 : 사용자에게 기타 AWS서비스에 엑세스 권한을 부여 가능 
+
+AWS CloudTrail
+: AWS 인프라에서 계정활동과 관련된 작업을 기록하고 지속적으로 모니터링 및 보관
+AWS 계정활동의 이벤트 기록을 제공 
+
+AWS Device Farm
+: 인프라를 프로비저닝 및 관리하지않고도 다양한 데스크톱 브라우저와 모바일디바이스에서
+테스트를 진행하여 어플리케이션 품질을 향상시키는 어플리케이션 테스트 서비스.
+
+
+
+
