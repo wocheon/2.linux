@@ -1,0 +1,23 @@
+# yml 파일에서 다음과 같이 설정 
+# gcloud 인증되어있어야 정상적으로 연결가능
+# relabel_configs로 hostname도 같이 수집하도록 추가
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "GCE_vm"
+    gce_sd_configs:
+      - project: xxxxxx
+        zone: asia-northeast3-a
+        port: 9100
+      - project: xxxxxx
+        zone: asia-northeast3-b
+        port: 9100
+      - project: xxxxxx
+        zone: asia-northeast3-c
+        port: 9100
+    relabel_configs:
+      - source_labels: [__meta_gce_instance_name]
+        target_label: hostname
