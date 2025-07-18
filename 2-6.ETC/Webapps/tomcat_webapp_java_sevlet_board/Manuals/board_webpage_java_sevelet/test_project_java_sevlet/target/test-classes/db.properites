@@ -1,0 +1,3 @@
+db.url=jdbc:mysql://mysqldb:3306/board?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+db.username=testuser
+db.password=testpass
