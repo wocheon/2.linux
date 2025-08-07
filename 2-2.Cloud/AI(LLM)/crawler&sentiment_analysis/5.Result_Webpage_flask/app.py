@@ -5,7 +5,6 @@ from collections import OrderedDict
 
 app = Flask(__name__)
 
-# config.ini 경로는 실제 위치에 맞게 조정하세요.
 config = configparser.ConfigParser()
 config.read('config.ini')  # 기본 경로가 app.py 위치 기준
 
@@ -43,15 +42,13 @@ def get_combined_model_data():
     conn = pymysql.connect(**db_config)
     cursor = conn.cursor()
 
-    query = """
+    query = """    
     SELECT
         id, keyword_id, keyword, title, content, url,
         'KoELECTRA' AS model,
         sentiment, score, published_at, collected_at
     FROM koelectra_sentiment_result_view
-
     UNION ALL
-
     SELECT
         id, keyword_id, keyword, title, content, url,
         'KoBERT' AS model,
@@ -120,16 +117,6 @@ def koelectra():
     data = get_data_koelectra()
     sentiment_list = ['angry', 'happy', 'anxious', 'embarrassed', 'sad', 'heartache']
     return render_template('koelectra_table.html', data=data, sentiment_list=sentiment_list, active_tab='koelectra')
-
-#@app.route('/kobert')
-#def kobert():
-#    data = get_data_kobert()
-#    return render_template('kobert_table.html', data=data)
-
-#@app.route('/koelectra')
-#def koelectra():
-#    data = get_data_koelectra()
-#    return render_template('koelectra_table.html', data=data)
 
 @app.route('/comparison')
 def comparison():

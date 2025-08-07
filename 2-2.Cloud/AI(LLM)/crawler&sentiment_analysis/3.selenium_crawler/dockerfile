@@ -14,11 +14,19 @@ RUN apt-get update && apt-get install -y \
 ENV CHROME_VERSION=138.0.7204.183
 
 # Chrome 설치
+#RUN mkdir -p /opt/chrome && \
+#    wget -q https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip && \
+#    unzip chrome-linux64.zip && \
+#    mv chrome-linux64/* /opt/chrome/ && \
+#    rm -rf chrome-linux64.zip chrome-linux64
+
+# Chrome-Headless-Shell 설치
+# 부하로 인해 headless 버전으로 변경
 RUN mkdir -p /opt/chrome && \
-    wget -q https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip && \
-    unzip chrome-linux64.zip && \
-    mv chrome-linux64/* /opt/chrome/ && \
-    rm -rf chrome-linux64.zip chrome-linux64
+    wget -q https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-headless-shell-linux64.zip && \
+    unzip chrome-headless-shell-linux64.zip && \
+    mv chrome-headless-shell-linux64/* /opt/chrome/ && \
+    rm -rf chrome-headless-shell-linux64.zip chrome-headless-shell-linux64
 
 # ChromeDriver 설치
 RUN wget -q https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip && \
@@ -32,7 +40,8 @@ ENV PATH="/opt/chrome:$PATH"
 ENV CHROME_BIN="/opt/chrome/chrome"
 
 # 버전 출력 (빌드시 로그용)
-RUN /opt/chrome/chrome --version && chromedriver --version
+#RUN /opt/chrome/chrome --version && chromedriver --version
+RUN /opt/chrome/chrome-headless-shell --version && chromedriver --version
 
 # 파이썬 패키지 설치
 COPY requirements.txt .

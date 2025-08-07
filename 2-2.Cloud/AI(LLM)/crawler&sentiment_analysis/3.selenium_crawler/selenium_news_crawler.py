@@ -99,7 +99,8 @@ def get_config(path="config.ini"):
 
 def get_driver():
     options = Options()
-    options.binary_location = "/opt/chrome/chrome"
+    #options.binary_location = "/opt/chrome/chrome" # Headless 버전으로 교체     
+    options.binary_location = "/opt/chrome/chrome-headless-shell"
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
@@ -114,6 +115,7 @@ def get_driver():
     options.add_argument('--disable-renderer-backgrounding')
     # options.add_argument('--single-process')  # 필요 시 테스트 권장
     options.add_argument('--remote-allow-origins=*')  # Chrome 111+ 보안 관련 이슈 대응
+    options.add_argument('--window-size=1920,1080')
 
     base_path = os.path.dirname(__file__)
     driverLog_path = os.path.join(base_path, 'log', 'chromedriver.log')
