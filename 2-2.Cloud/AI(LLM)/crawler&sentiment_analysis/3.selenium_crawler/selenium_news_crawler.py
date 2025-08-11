@@ -203,11 +203,17 @@ def wait_for_any_element(driver, selectors, timeout=10):
     raise TimeoutException("None of the selectors were found in time.")
 
 def extract_news_content(url, driver=None):
-    text = extract_with_bs4(url)
-    if text:
-        logger.info("[본문] requests+BeautifulSoup 추출 성공")
-        return text
+    # 1) trafilatura 우선
+    try:
+        downloaded = trafilatura.fetch_url(url)
+        content = trafilatura.extract(downloaded)
+        if content and len(content.strip()) > 100:
+            logger.info("[본문] trafilatura 추출 성공")
+            return content.strip()
+    except Exception as e:
+        logger.warning(f"[본문] trafilatura 실패: {e}")
 
+    # 2) newspaper3k
     try:
         a = Article(url, language='ko')
         a.download()
@@ -218,15 +224,14 @@ def extract_news_content(url, driver=None):
     except Exception as e:
         logger.warning(f"[본문] newspaper3k 실패: {e}")
 
-    try:
-        downloaded = trafilatura.fetch_url(url)
-        content = trafilatura.extract(downloaded)
-        if content and len(content.strip()) > 100:
-            logger.info("[본문] trafilatura 추출 성공")
-            return content.strip()
-    except Exception as e:
-        logger.warning(f"[본문] trafilatura 실패: {e}")
 
+    # 3) BeautifulSoup (직접 셀렉터 탐색)
+    text = extract_with_bs4(url)
+    if text:
+        logger.info("[본문] requests+BeautifulSoup 추출 성공")
+        return text
+
+    # 4) selenium fallback
     if driver:
         try:
             selectors = [
@@ -373,27 +378,20 @@ def collect_zombies():
         pass
 
 def collect_article_in_new_tab(article_url, driver):
-    # 1) requests + bs4 우선 본문 추출 시도
-    content = extract_with_bs4(article_url)
-    if content and len(content) > 100:
-        logger.info("[INFO] requests+BeautifulSoup로 본문 추출 성공, Selenium 사용 생략")
-        return content
-
-    # 2) 실패 시에만 Selenium 새 탭 열고 대기해서 본문 추출
     original_handle = driver.current_window_handle
     driver.execute_script(f"window.open('{article_url}');")
     driver.switch_to.window(driver.window_handles[-1])
 
+    content = None
     try:
-        wait_for_any_element(driver, ["div.article-body", "div#article_body", "div.text", "article", "main", "section"], timeout=10)
-    except TimeoutException:
-        logger.warning("[SELENIUM] 새 탭 로딩 대기 타임아웃")
+        # 우리가 만든 통합 함수로 바로 호출
+        content = extract_news_content(article_url, driver)
+    except Exception as e:
+        logger.warning(f"[collect_article_in_new_tab] 추출 실패: {e}")
 
-    content = extract_news_content(article_url, driver)
     driver.close()
     driver.switch_to.window(original_handle)
     return content
-
 
 
 def main():
