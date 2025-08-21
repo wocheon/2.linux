@@ -18,12 +18,9 @@
     - 3.1[ Storage & Database 시나리오](#storage--database-시나리오)
     - 3.2[ Cloud Storage](#cloud-storage)
     - 3.3[ Cloud SQL ](#cloud-sql)
-    - 3.4[ Cloud DataStore (Firestore)](#cloud-datastore-firestore)
-    - 3.5[ Big Table / Big Query](#big-table--big-query)
-    - 3.6[ Dataproc](#dataproc)
-    - 3.7[ Dataflow](#dataflow)
-    - 3.8[ Cloud Data Loss Prevention(Cloud DLP)](#cloud-data-loss-preventioncloud-dlp)
-    - 3.9[ Cloud Datalab/ Cloud Dataprep](#cloud-datalabcloud-dataprep)
+    - 3.4[ Big Table/Big Query/Dataproc/Dataflow/Datastore](#big-tablebig-querydataprocdataflowdatastore)
+    - 3.5[ Cloud Data Loss Prevention(Cloud DLP)](#cloud-data-loss-preventioncloud-dlp)
+    - 3.6[ Cloud Datalab/ Cloud Dataprep](#cloud-datalabcloud-dataprep)
 
 4. `Network Resource`
     - 4.1[ Shared VPC / VPC Peering](#shared-vpc--vpc-peering)
@@ -385,35 +382,31 @@
 
 <br>
 
-## Cloud DataStore (Firestore)
-- 자동 확장, 고성능, 간편한 애플리케이션 개발을 위해 빌드된 NoSQL 문서 중심의 데이터베이스
 
-- 현재 최신버전의 Datastore인 Firestore로 업그레이드됨.
+---
 
-- 주요 특징
-    - 테이블이나 행이없고 컬렉션으로 정리되는 문서에 데이터 저장 
-    - 모든 문서는 컬렉션에 저장되어야 함
-    - 각 문서에는 키-값 쌍이 포함됨
->ex
-```js
-* users (Collection)
-    - alovelace (class)
-        first : "Ada" 
-        last : "Lovelace"
-        born : 1815
-    - aturing (class)
-        first : "Alan"
-        last : "Turing"
-        born : 1912
-```
+## Big Table/Big Query/Dataproc/Dataflow/Datastore
 
-### Entities, Properties, and Keys 
-- 항목 , 속성 , 키
-    - 항목에는 명명된 속성이 한 개 이상 있으며 각 속성에는 값이 한 개 이상 있을 수 있다
-    - 애플리케이션은 항목의 키를 사용하여 데이터베이스에서·개별 항목을 가져오거나 항목 키 또는 속성 값에 따라 쿼리를 실행하여 항목을 한 개 이상 검색 가능.
-<br>
+| 서비스명     | 타입                        | 주요 용도 및 역할                                           | 특징 및 장점                                                |
+|--------------|-----------------------------|----------------------------------------------------------|------------------------------------------------------------|
+| BigTable     | NoSQL 광폭 열(Column) 데이터베이스  | 저지연성, 대규모 읽기/쓰기, IoT, 클릭스트림 등 대용량 데이터 저장 및 처리 | 고성능, 수평 확장 가능, HBase 및 Cassandra 호환, 실시간 대용량 처리 적합 |
+| BigQuery     | 완전관리형 서버리스 데이터 웨어하우스 (OLAP) | 페타바이트 단위 대규모 데이터에 대한 SQL 기반 분석 및 쿼리           | 확장성 높음, 빠른 쿼리 성능, 저장과 컴퓨팅 분리, 쉬운 데이터 분석          |
+| Dataproc     | 관리형 Apache Spark, Hadoop 클러스터 서비스 | 데이터 처리 클러스터 생성 및 관리, 빅데이터 일괄 처리 및 분석           | 간편한 클러스터 관리, 기존 Hadoop/Spark 워크로드 재사용 가능            |
+| Dataflow     | 완전관리형 스트림 및 일괄 데이터 처리 서비스 | 실시간 및 일괄 데이터 파이프라인 처리, ETL, 스트리밍 분석               | 서버리스, 자동 확장, Apache Beam 기반, 복잡한 데이터 처리 파이프라인 지원  |
+| Datastore   | 관리형 NoSQL 문서형 데이터베이스       | 웹 및 모바일 앱 용도로 빠른 읽기/쓰기 및 확장 가능한 트랜잭션 지원      | 완전 관리형, 자동 확장, ACID 트랜잭션 지원, 쉬운 개발
 
-## Big Table / Big Query
+
+
+### Datastore와 Bigtable 비교
+ - Bigtable
+    - 와이드 컬럼 기반의 대용량, 저지연 NoSQL DB로 수십억 건 이상의 초대용량 데이터를 빠르게 저장하고 분석 가능
+ - Datastore
+    - 문서(document) 중심의 NoSQL 데이터베이스로, 복잡한 구조화된 데이터와 트랜잭션을 지원하며 웹/모바일 애플리케이션에 적합
+    
+- Datastore와 Bigtable 비교
+    - Datastore는 구조화된 애플리케이션 데이터에 적합
+    - Bigtable은 대규모 로그, 클릭스트림, IoT 데이터 등 빅데이터 처리에 적합
+
 
 ### Big Table
 - 대규모 분석 및 운영 워크로드를 위한 확장 가능한 완전 관리형 NoSQL 데이터베이스 서비스
@@ -443,19 +436,19 @@
 
 
 ## Dataproc
-- 완전 관리형의 자동화된 빅데이터 오픈소스 소프트웨어
-    - Apache Hadoop, Apache Spark, Apache Flink, Presto, 30개 이상의 오픈소스 도구 및 프레임워크 제공
-
+- 빅데이터 처리용 완전 관리형 Spark/Hadoop 클러스터를 제공하는 PaaS 서비스
+    - 주로 대규모 데이터 처리, 분석, ETL(추출, 변환, 적재), 머신러닝 작업 등에 사용
+    - Spark, Hadoop MapReduce, Hive, Pig 등 다양한 빅데이터 오픈소스 도구를 활용하여 일괄 처리, 쿼리, 스트리밍, 머신러닝 작업을 수행 가능
 
 <br>
 
 
 ## Dataflow
-- 통합 스트림 및 일괄 데이터 처리를 대규모로 제공하는 Google Cloud 서비스
-
-- Apache Beam 프로젝트 기반으로 구축됨 
-
-- 하나 이상의 소스에서 읽은 데이터로 파이프라인을 만들고, 데이터를 변환하고, 데이터를 대상에 기록 가능
+- 주요 특징
+    - **데이터 파이프라인을 코드로 정의해 클라우드에서 손쉽게 데이터를 이동·변환·분석하도록 돕는 서버리스 빅데이터 처리 서비스**
+    - 통합 스트림 및 일괄 데이터 처리를 대규모로 제공하는 Google Cloud 서비스
+    - Apache Beam 프로젝트 기반으로 구축됨 
+    - 하나 이상의 소스에서 읽은 데이터로 파이프라인을 만들고, 데이터를 변환하고, 데이터를 대상에 기록 가능
 
 
 - 주 사용 사례
@@ -471,33 +464,18 @@
     
     - 대규모 센서 데이터 또는 로그 데이터 처리
 
+## DataStore
+- Google Cloud에서 제공하는 완전 관리형 NoSQL 문서 데이터베이스
 
-- 특징 
-    - 관리형
-        - 완전 관리형 서비스로 제공
+- 웹 및 모바일 애플리케이션에서 구조화된 데이터를 효율적으로 저장하고 관리하기 위해 설계됨
 
-    - 확장 가능
-        - 데이터가 병렬로 처리되므로 작업이 여러 VM에 걸쳐서 분산
-
-        - 자동 확장 수행 가능 
-            - 추가 작업자 VM을 프로비저닝 or 일부 작업자 VM을 종료
-
-        - 파이프라인의 특성을 기준으로 작업을 최적화
-
-    - 휴대성
-        -  Apache Beam을 통해 언어별 SDK를 사용해서 파이프라인을 작성 가능
-            - Java, Python, Go SDK는 물론 다중 언어 파이프라인이 지원
-        -  Apache Flink 또는 Apache Spark와 같은 다른 플랫폼에서 파이프라인을 실행시 코드를 재작성할 필요가 없음
-
-    - 유연성
-        - 일괄 처리에서 스트리밍으로 이동하거나 보다 복잡한 사용 사례로 전환할 때 필요에 따라 Dataflow 기반 솔루션을 확장 가능
-
-        -  일반적인 시나리오를 위한 템플릿 라이브러리를 제공
-            -  Apache Beam 프로그래밍 개념을 몰라도 템플릿을 배포 가능
-
-    - 관측 가능성
-        - Google Cloud 콘솔에서 Dataflow 모니터링 인터페이스를 통해 Dataflow 작업 상태를 모니터링 가능
-
+- 주요 특징 
+    - 자동 확장 및 고가용성
+    - ACID 트랜잭션 지원
+    - 유연한 데이터 모델
+    - SQL 유사 쿼리 제공
+    - 강력한 일관성(Strong consistency)
+    - 다양한 GCP 서비스와 통합
 
 <br>
 
