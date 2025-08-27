@@ -917,13 +917,10 @@ curl -s http://localhost:8083/connectors/postgres-sink-connector/status | jq
 
 
 - Kafka Topic 리스트 확인
-
-- PostgreDB용 Connector의 경우, schema.history.internal.kafka.topic 옵션을 지정하더라도 별도 토픽이 만들어지지 않음
-  - Postgres Connector는는 logical decoding 플러그인(pgoutput, wal2json, decoderbufs)을 사용
-    - MySQL/SQL Server: binlog에서 테이블 스키마를 직접 알 수 없어서 별도 히스토리 토픽 필요.
-    - PostgreSQL: logical replication stream에서 테이블 구조 정보를 직접 제공하기 때문에 별도 토픽이 필요 없음.
-
-
+    - PostgreDB용 Connector의 경우, schema.history.internal.kafka.topic 옵션을 지정하더라도 별도 토픽이 만들어지지 않음
+    - Postgres Connector는는 logical decoding 플러그인(pgoutput, wal2json, decoderbufs)을 사용
+        - MySQL/SQL Server: binlog에서 테이블 스키마를 직접 알 수 없어서 별도 히스토리 토픽 필요.
+        - PostgreSQL: logical replication stream에서 테이블 구조 정보를 직접 제공하기 때문에 별도 토픽이 필요 없음.
 ```sh 
 $ docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 __consumer_offsets
