@@ -584,7 +584,7 @@ drwxr-xr-x 3 jenkins jenkins 4096 Sep 18 02:19 hudson.tasks.Maven_MavenInstallat
 - 위 설정 후 gitlab프로젝트를 가져와서 maven 등으로 Scan작업이 가능
 
 
-## Nexus 내 docker repository 생성
+## Nexus 내 Docker Image Registry 생성
 - Nexus에서 Docker 이미지를 저장가능한 Registry를 생성
     - Settings > Repository > Repositories > Create repository
         - Recipe : docker (hosted)
@@ -594,3 +594,322 @@ drwxr-xr-x 3 jenkins jenkins 4096 Sep 18 02:19 hudson.tasks.Maven_MavenInstallat
 
 
 ## CI/CD Pipeline #1 - Docker Build 
+### 동작 방식
+1. git scm을 통해 checkout
+2. sonarqube scan을 통해 소스코드 점검
+3. sonarqube scan이 Pass면 다음단계 수행, 아닌경우 에러 발생
+4. docker image 빌드
+5. 빌드된 이미지를 nexus 저장소에 업로드 가능하도록 tag 변경
+6. nexus docker-hosted 저장소 접근을 위해 docker login
+7. nexus docker-hosted 저장소에 docker image 업로드
+
+
+### 스크립트 예시
+
+```groovy
+pipeline {
+  agent any
+
+  environment {
+    SONARQUBE_SERVER = 'sonarqube'
+    SONARQUBE_SCANNER = 'sonarqube_scanner'
+    SONARQUBE_PROJECTKEY = 'docker_build_test'
+    IMAGE_NAME = "tz-converter"
+    IMAGE_TAG  = "latest"
+    NEXUS_URL  = "nexus.test-cicd.com"
+    NEXUS_URL_PORT  = 80
+    NEXUS_REPO  = "docker-hosted"
+    DOCKER_CREDENTIALS_ID = "nexus-credentials"
+  }
+
+  stages {
+    stage('SonarQube Scan') {
+      steps {
+        withSonarQubeEnv('sonarqube') {
+          withCredentials([string(credentialsId: 'sonarqube-token', variable: 'token')]) {
+            script {
+              def scannerHome = tool env.SONARQUBE_SCANNER
+              sh """              
+                ${scannerHome}/bin/sonar-scanner \
+                  -Dsonar.projectKey=${env.SONARQUBE_PROJECTKEY} \
+                  -Dsonar.sources=. \
+                  -Dsonar.host.url=http://test-cicd.com/sonarqube \
+                  -Dsonar.login=$token              
+              """
+            }
+          }
+        }
+      }
+    }
+    stage('Quality Gate') {
+      steps {
+        timeout(time: 1, unit: 'HOURS') {
+          waitForQualityGate abortPipeline: true
+        }
+      }
+    }
+    stage('Build Docker Image') {
+        steps {
+            script {
+                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+            }
+        }
+    }
+    stage('Tag Image for Nexus') {
+        steps {
+            script {
+                sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${NEXUS_URL}:${NEXUS_URL_PORT}/${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+    }
+    
+    stage('Login to Nexus Docker Registry') {
+        steps {
+            script {
+                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh "echo $NEXUS_PASS | docker login ${NEXUS_URL}:${NEXUS_URL_PORT} --username $NEXUS_USER --password-stdin"
+                }
+            }
+        }
+    }
+    stage('Push Image to Nexus') {
+        steps {
+            script {
+                sh "docker push ${NEXUS_URL}:${NEXUS_URL_PORT}/${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+    }
+  }
+  // 워크스페이스 삭제 
+  post {
+      always {
+          cleanWs()  
+      }
+  }  
+}
+
+```
+
+
+## CI/CD Pipeline #2 - Docker Deploy
+### 트리거 설정 
+- 트리거 옵션 : `Build after other projects are built`(특정 프로젝트 빌드 후 동작)
+  - 대상 프로젝트 :  `docker_build_test`
+  - 동작 옵션 :  `Trigger only if build is stable` (대상 프로젝트 정상 빌드 시에만 동작)
+
+### 동작 방식
+1. git scm을 통해 checkout
+2. nexus docker-hosted 저장소에서 docker image Pull
+3. 기존 Container 삭제 후 재성성 
+4. 빌드 캐시 및 미사용 이미지 정리
+
+
+### 스크립트 예시
+
+```groovy
+pipeline {
+  agent any
+
+  environment {
+    IMAGE_NAME = "tz-converter"
+    IMAGE_TAG  = "latest"
+    NEXUS_URL  = "nexus.test-cicd.com"
+    NEXUS_URL_PORT  = 80
+    NEXUS_REPO  = "docker-hosted"
+    DOCKER_CREDENTIALS_ID = "nexus-credentials"
+  }
+
+  stages {
+    stage('Check Workspace Path & FIles') {
+      steps {
+        echo 'execute ls command'
+        sh '''
+          pwd; ls -la
+        '''
+      }
+    }
+    stage('Pull Image to Nexus') {
+        steps {
+            script {
+                sh "docker pull ${NEXUS_URL}:${NEXUS_URL_PORT}/${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+    }
+    stage('rebuild & restart Container') {
+      steps {
+        echo 'Maybe sh is independent'
+        sh'''
+        docker rm -f ${IMAGE_NAME}
+        docker run --rm -d -p 5000:5000 --name ${IMAGE_NAME} ${NEXUS_URL}:${NEXUS_URL_PORT}/${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}
+        docker image prune -f 
+        docker system prune -f
+        '''
+      }
+    }
+  }
+  // 워크스페이스 삭제 
+  post {
+      always {
+          cleanWs()  
+      }
+  }  
+}
+```
+
+
+
+## CI/CD Pipeline #3 - WAR Build
+### 동작 방식
+1. git scm을 통해 checkout
+2. sonarqube scan을 통해 소스코드 점검
+3. sonarqube scan이 Pass면 다음단계 수행, 아닌경우 에러 발생
+4. mvn clean package로 WAR파일 빌드
+5. WAR파일을 포함하여 docker image 빌드 및 Tagging
+6. Maven 아티팩트 업로드를 위한 settings.xml 파일 생성
+7. nexus docker registry 접근을 위해 docker login
+8. nexus maven-release 저장소에 WAR파일 업로드
+9. nexus docker-hosted 저장소에 docker image 업로드
+
+### 스크립트 예시
+
+```groovy
+pipeline {
+  agent any
+
+  environment {
+    SONARQUBE_SERVER = 'sonarqube'
+    SONARQUBE_SCANNER = 'sonarqube_scanner'
+    SONARQUBE_PROJECTKEY = 'docker_build_test'
+    IMAGE_NAME = "tz-converter"
+    IMAGE_TAG  = "latest"
+    NEXUS_URL  = "nexus.test-cicd.com"
+    NEXUS_URL_PORT  = 80
+    NEXUS_REPO  = "docker-hosted"
+    DOCKER_CREDENTIALS_ID = "nexus-credentials"
+  }
+
+  stages {
+    stage('SonarQube Scan') {
+      steps {
+        withSonarQubeEnv('sonarqube') {
+          withCredentials([string(credentialsId: 'sonarqube-token', variable: 'token')]) {
+            script {
+              def scannerHome = tool env.SONARQUBE_SCANNER
+              sh """              
+                ${scannerHome}/bin/sonar-scanner \
+                  -Dsonar.projectKey=${env.SONARQUBE_PROJECTKEY} \
+                  -Dsonar.sources=. \
+                  -Dsonar.host.url=http://test-cicd.com/sonarqube \
+                  -Dsonar.login=$token              
+              """
+            }
+          }
+        }
+      }
+    }
+    stage('Quality Gate') {
+      steps {
+        timeout(time: 1, unit: 'HOURS') {
+          waitForQualityGate abortPipeline: true
+        }
+      }
+    }
+    stage('Build Docker Image') {
+        steps {
+            script {
+                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+            }
+        }
+    }
+    stage('Tag Image for Nexus') {
+        steps {
+            script {
+                sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${NEXUS_URL}:${NEXUS_URL_PORT}/${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+    }
+    
+    stage('Login to Nexus Docker Registry') {
+        steps {
+            script {
+                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh "echo $NEXUS_PASS | docker login ${NEXUS_URL}:${NEXUS_URL_PORT} --username $NEXUS_USER --password-stdin"
+                }
+            }
+        }
+    }
+    stage('Push Image to Nexus') {
+        steps {
+            script {
+                sh "docker push ${NEXUS_URL}:${NEXUS_URL_PORT}/${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+    }
+  }
+  // 워크스페이스 삭제 
+  post {
+      always {
+          cleanWs()  
+      }
+  }
+}
+```
+
+## CI/CD Pipeline #4 - WAR Depoly
+### 동작 방식
+1. git scm을 통해 checkout
+2. nexus docker-hosted 저장소에서 docker image Pull
+3. 기존 Container 삭제 후 재성성 
+4. 빌드 캐시 및 미사용 이미지 정리
+
+### 스크립트 예시
+
+```groovy
+pipeline {
+  agent any
+
+  environment {
+    IMAGE_NAME = "tomcat-testwebapp"
+    IMAGE_TAG  = "latest"
+    NEXUS_URL  = "nexus.test-cicd.com"
+    NEXUS_URL_PORT  = 80
+    NEXUS_REPO  = "docker-hosted"
+    DOCKER_CREDENTIALS_ID = "nexus-credentials"
+  }
+
+  stages {
+    stage('Check Workspace Path & FIles') {
+      steps {
+        echo 'execute ls command'
+        sh '''
+          pwd; ls -la
+        '''
+      }
+    }
+    stage('Pull Image to Nexus') {
+        steps {
+            script {
+                sh "docker pull ${NEXUS_URL}:${NEXUS_URL_PORT}/${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+    }
+    stage('rebuild & restart Container') {
+      steps {
+        echo 'Maybe sh is independent'
+        sh'''
+        docker rm -f ${IMAGE_NAME}
+        docker run --rm -d -p 5001:8080 --name ${IMAGE_NAME} ${NEXUS_URL}:${NEXUS_URL_PORT}/${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}
+        docker image prune -f 
+        docker system prune -f
+        '''
+      }
+    }
+  }
+  // 워크스페이스 삭제 
+  post {
+      always {
+          cleanWs()  
+      }
+  }  
+}
+```

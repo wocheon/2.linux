@@ -87,3 +87,89 @@ else
 fi
 ```
 
+## GCP VM용 Bastion Script
+
+- 계정 별 서버 목록 파일
+    - 각 계정별 접근 가능 VM 목록 기록 
+    - ID/구분/VM명/IP/ZONE/Machine_Type/CPU/Memory 순으로 기록 
+> /usr/share/bastion_ssh_connect_list.txt
+```
+#user1
+user1,PROD,vm-1,192.168.1.110,asia-northeast3-a,n1-standard-2,2,8
+user1,PROD,vm-2,192.168.1.120,asia-northeast3-a,n1-standard-2,2,8
+#user2
+user2,PROD,vm-2,192.168.1.120,asia-northeast3-a,n1-standard-2,2,8
+user2,PROD,vm-3,192.168.1.130,asia-northeast3-a,n1-standard-8,8,32
+```
+
+- fzf 실행용 bastion 스크립트 
+    - /usr/local/bin에 생성하여 바로 실행가능하도록 설정
+    - 755 권한 부여 
+> /usr/local/bin/bastion_ssh_connect 
+```bash
+#!/bin/bash
+
+# 현재 접속한 사용자 계정명 읽기
+USER=$(whoami)
+if [ $USER == 'root' ];then
+    echo "Root User 사용불가"
+        exit 0
+fi
+
+# 실행중인 서버 목록을 OPTIONS 배열에 저장
+OPTIONS=()
+first_line=true
+
+# options_user.txt 파일 읽기
+while IFS=',' read -r account server_type server_name ip zone machine_type vcpus memory; do
+        if $first_line; then
+        # 헤더를 그대로 추가
+        OPTIONS+=("구분 서버명 IP ZONE Machine_Type (vCPUs,Memory)")
+        first_line=false
+        continue
+    fi
+
+    if [ "$account" == "$USER" ]; then
+        # 각 항목을 공백으로 구분하여 저장
+        OPTIONS+=("$server_type $server_name $ip $zone $machine_type ($vcpus,$memory) ")
+    fi
+done < /usr/share/bastion_ssh_connect_list.txt
+
+# 실행중인 서버 목록이 없으면 종료
+if [ ${#OPTIONS[@]} -eq 0 ]; then
+    echo "$USER 계정에 대한 서버 목록이 없습니다."
+    exit 1
+fi
+
+
+# 타이틀 출력
+echo -e "\E[44;37m### Bastion SSH 접속###\E[0m"
+echo -e "\E[;32m* User : $USER\E[0m"
+
+# fzf를 사용하여 서버 선택 (커서가 맨 위에 가도록 --reverse 옵션 추가)
+CHOICE=$((
+#    echo "$HEADER"
+    for option in "${OPTIONS[@]}"; do
+        echo "$option"
+    done
+) | column -t | fzf --reverse --prompt="검색: " --header-lines=1 --height=60% --border --ansi --select-1)
+
+# 선택된 값 확인 및 처리
+if [ -n "$CHOICE" ]; then
+    # 선택된 항목에서 서버 정보를 추출
+    SERVER_INFO=$(echo "$CHOICE" | awk '{print $3}' | xargs)
+    SELECTED=$(grep -w "$SERVER_INFO" /usr/share/bastion_ssh_connect_list.txt | head -n 1)
+
+    if [ -n "$SELECTED" ]; then
+        # 서버 정보 분리 (server_type, server_name, ip, status)
+        IFS=',' read -r account server_type server_name ip zone vm_machine_type specs <<<"$SELECTED"
+                echo -e "\E[;35m* Selected_VM : $server_name ($ip) - $zone \n  Machine_Type : ${vm_machine_type} (${specs})\E[0m"
+        sshpass ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$ip"
+    else
+        echo "유효하지 않은 선택입니다."
+    fi
+else
+    echo "취소되었습니다."
+fi
+```
+

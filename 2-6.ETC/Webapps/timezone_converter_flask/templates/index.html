@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Time Zone Converter</title>
+    <style>
+        table { border-collapse: collapse; width: 50%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+        td.right { text-align: right; }
+        form { margin-bottom: 20px; }
+        label { display: inline-block; width: 180px; }
+        input, select { margin-bottom: 10px; }
+        #result { margin-top: 10px; font-weight: bold; }
+        button { margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <h1>시간대별 현재 시간 목록</h1>
+
+    <form id="convert-form">
+        <label for="from_tz">기준 시간대 선택:</label>
+        <select id="from_tz" name="from_tz" required>
+            {% for tz in timezones %}
+                <option value="{{ tz }}">{{ tz }}</option>
+            {% endfor %}
+        </select><br>
+
+        <label for="datetime">시간 입력 (ISO 8601):</label>
+        <input type="text" id="datetime" name="datetime" style="width: 250px;" placeholder="예: 2025-08-19T09:52:30.12345Z">
+
+        <button type="button" id="now-btn" title="현재 시간 입력">현재 시간 입력</button><br>
+
+        <button type="submit">변환</button>
+    </form>
+
+    <div id="result"></div>
+
+    <table>
+        <thead>
+            <tr><th>Time Zone</th><th>시간 (기준 시간대 기준)</th></tr>
+        </thead>
+        <tbody id="times-tbody">
+            <!-- JS가 데이터 채움 -->
+        </tbody>
+    </table>
+
+    <script>
+        const timezones = {{ timezones | tojson }};
+        const nowIso = "{{ now_iso }}";
+
+        const form = document.getElementById('convert-form');
+        const resultDiv = document.getElementById('result');
+        const timesTbody = document.getElementById('times-tbody');
+        const datetimeInput = document.getElementById('datetime');
+        const nowButton = document.getElementById('now-btn');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            form.from_tz.value = 'UTC';
+            updateTimes('UTC', null);
+        });
+
+        nowButton.addEventListener('click', () => {
+            const now = new Date();
+            const isoString = now.toISOString();
+            datetimeInput.value = isoString;
+        });
+
+        function updateTimes(from_tz, datetime) {
+            resultDiv.textContent = '시간 목록 불러오는 중...';
+            fetch('/convert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    from_tz: from_tz,
+                    to_tz: from_tz,
+                    datetime: datetime
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.error){
+                    resultDiv.textContent = '오류: ' + data.error;
+                    return;
+                }
+                resultDiv.textContent = '';
+                timesTbody.innerHTML = '';
+                for(const [tz, time] of Object.entries(data.times)){
+                    const tr = document.createElement('tr');
+                    const tdTz = document.createElement('td');
+                    tdTz.textContent = tz;
+                    const tdTime = document.createElement('td');
+                    tdTime.textContent = time;
+                    tdTime.className = 'right';
+                    tr.appendChild(tdTz);
+                    tr.appendChild(tdTime);
+                    timesTbody.appendChild(tr);
+                }
+            })
+            .catch(err => {
+                resultDiv.textContent = '서버 통신 오류: ' + err.message;
+            });
+        }
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            const from_tz = form.from_tz.value;
+            const datetime = datetimeInput.value.trim() || null;
+
+            resultDiv.textContent = '변환 중...';
+
+            fetch('/convert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ from_tz, to_tz: from_tz, datetime })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.error){
+                    resultDiv.textContent = '오류: ' + data.error;
+                    return;
+                }
+                updateTimes(from_tz, datetime);
+            })
+            .catch(err => {
+                resultDiv.textContent = '서버 통신 오류: ' + err.message;
+            });
+        });
+    </script>
+</body>
+</html>
