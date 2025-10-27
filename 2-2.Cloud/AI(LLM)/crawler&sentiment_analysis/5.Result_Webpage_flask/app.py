@@ -42,25 +42,7 @@ def get_data_koelectra():
 def get_combined_model_data():
     conn = pymysql.connect(**db_config)
     cursor = conn.cursor()
-
-    query = """
-    SELECT
-        id, keyword_id, keyword, title, content, url,
-        'KoELECTRA' AS model,
-        sentiment, score, published_at, collected_at
-    FROM koelectra_sentiment_result_view
-
-    UNION ALL
-
-    SELECT
-        id, keyword_id, keyword, title, content, url,
-        'KoBERT' AS model,
-        sentiment, score, published_at, collected_at
-    FROM kobert_sentiment_result_view
-    ORDER BY id, model;
-    """
-
-    cursor.execute(query)
+    cursor.execute(model_comparison_query)
     rows = cursor.fetchall()
     conn.close()
 

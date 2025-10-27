@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS koelectra_sentiment_analysis_result (
 );
 
 
+-- 결과 페이지 확인용 View 생성 - KoBERT
+
 create view kobert_sentiment_result_view 
 as
 select 
@@ -57,8 +59,6 @@ A.id
 ,A.url
 ,C.sentiment as kobert_sentiment
 ,C.score as kobert_score
-,D.sentiment as koelectra_sentiment
-,D.score as koelectra_score
 ,A.published_at
 ,A.collected_at
 from 
@@ -69,6 +69,9 @@ where
 	A.keyword_id = B.id
 	AND A.id = C.article_id;
 
+
+-- 결과 페이지 확인용 View 생성 -  KoELECTRA
+
 create view koelectra_sentiment_result_view 
 as
 select 
@@ -78,10 +81,8 @@ A.id
 ,A.title
 ,A.content
 ,A.url
-,C.sentiment as kobert_sentiment
-,C.score as kobert_score
-,D.sentiment as koelectra_sentiment
-,D.score as koelectra_score
+,C.sentiment as koelectra_sentiment
+,C.score as koelectra_score
 ,A.published_at
 ,A.collected_at
 from 
@@ -92,17 +93,19 @@ where
 	A.keyword_id = B.id
 	AND A.id = C.article_id;    
 
+-- 결과 페이지 확인용 View 생성 - 모델 비교
+
 create view model_comparison_result_view 
 as
 SELECT 
 id, keyword_id, keyword, title, content, url,
 'KoELECTRA' AS model,
-sentiment, score, published_at, collected_at
+koelectra_sentiment as sentiment, koelectra_score as score, published_at, collected_at
 FROM koelectra_sentiment_result_view
 UNION ALL
 SELECT 
 id, keyword_id, keyword, title, content, url,
 'KoBERT' AS model,
-sentiment, score, published_at, collected_at
+kobert_sentiment as sentiment, kobert_score as score, published_at, collected_at
 FROM kobert_sentiment_result_view
 ORDER BY id, model;
