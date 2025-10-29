@@ -42,8 +42,7 @@ EXPOSE 80 or EXPOSE 443
   다양한 명령 실행이 필요하다면 스크립트를 사용 <br> 
 
   `스크립트를 사용하려면 먼저 copy로 전달해주어야함`
-  
-  <br>
+
 
 ---
 
@@ -67,6 +66,40 @@ container를 실행할때 인자값을 주게 되면 <br>
 - 메인 명령어가 실행시 default option 인자 값은 CMD로 정의해 주는게 좋다.
 
 - ENTRYPOINT 와 CMD는 리스트 포맷 ( ["args1", "args2",...] )으로 정의해 주는게 좋다.
+
+
+#### 예시 1- CMD를 사용하여 테스트용 이미지 구성 
+- CMD로 dockerfile 구성
+```sh
+FROM ubuntu:20.04
+
+CMD ["sleep"]
+```
+
+- `docker run -it` 로 /bin/bash 실행 
+```sh
+# 특정 docker run 명령어로 컨테이너 실행 가능 확인
+$ docker run -it test_image /bin/bash
+root@51f6f10377b4:/#
+```
+
+#### 예시 2 - ENTRYPOINT를 사용하여 테스트용 이미지 구성 
+- ENTRYPOINT로 dockerfile 구성
+```sh
+FROM ubuntu:20.04
+
+ENTRYPOINT ["sleep"]
+```
+
+- `docker run -it` 로 /bin/bash 실행 
+```sh
+# 특정 docker run 명령어로 컨테이너 실행 불가
+docker run -it test_image /bin/bash
+sleep: invalid time interval '/bin/bash'
+Try 'sleep --help' for more information.
+```
+
+  <br>
 
 ---
 
