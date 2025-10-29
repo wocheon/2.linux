@@ -88,7 +88,7 @@ gcloud compute instances stop %INSTANCE% --project=%PROJECT% --zone=%ZONE% && pa
 ```bat
 @echo off
 set PROVIDER=Google Cloud(GCP)
-set PROJECT=gcp-in-ca
+set PROJECT=test-project
 set INSTANCE=gcp-an3-a-iac-vm
 set ZONE=asia-northeast3-a
 

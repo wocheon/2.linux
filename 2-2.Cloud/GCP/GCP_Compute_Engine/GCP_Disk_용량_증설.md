@@ -401,7 +401,7 @@ tmpfs                           tmpfs         1.9G  8.5M  1.9G   1% /run
 tmpfs                           tmpfs         1.9G     0  1.9G   0% /sys/fs/cgroup
 /dev/sda2                       xfs            24G  9.6G   15G  40% /
 /dev/sda1                       vfat          200M   12M  189M   6% /boot/efi
-gcp-in-ca-test-bucket-wocheon07 fuse.gcsfuse  1.0P     0  1.0P   0% /share
+test-project-test-bucket-wocheon07 fuse.gcsfuse  1.0P     0  1.0P   0% /share
 tmpfs                           tmpfs         379M     0  379M   0% /run/user/1001
 /dev/sdb1                       ext4          9.8G   36M  9.2G   1% /data001
 ```

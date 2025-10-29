@@ -177,7 +177,7 @@ Feb 08 14:14:53 gcp-ansible-test gmetad[2056]: Source: [cluster-01, step 15] has
 Feb 08 14:14:53 gcp-ansible-test gmetad[2056]: 127.0.0.1
 Feb 08 14:14:53 gcp-ansible-test gmetad[2056]: Data thread 140454769583872 is monitoring [cluster-01] data source
 Feb 08 14:14:53 gcp-ansible-test gmetad[2056]: 127.0.0.1
-Feb 08 14:14:53 gcp-ansible-test gmetad[2056]: Unable to mkdir(/var/lib/ganglia/rrds/cluster-01/gcp-ansible-test.asia-northeast3-c.c.gcp-in-ca.internal): Permission denied
+Feb 08 14:14:53 gcp-ansible-test gmetad[2056]: Unable to mkdir(/var/lib/ganglia/rrds/cluster-01/gcp-ansible-test.asia-northeast3-c.c.test-project.internal): Permission denied
 #! /var/lib/ganglia/rrds/cluster-01에 디렉토리 생성이 불가하여 서비스 기동 불가
 Feb 08 14:14:53 gcp-ansible-test systemd[1]: gmetad.service: main process exited, code=exited, status=1/FAILURE
 Feb 08 14:14:53 gcp-ansible-test systemd[1]: Unit gmetad.service entered failed state.

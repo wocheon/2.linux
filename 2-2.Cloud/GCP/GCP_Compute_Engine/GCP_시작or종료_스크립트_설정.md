@@ -162,8 +162,8 @@ today=$(date '+%y%m%d')
 
 tar -cvf ${hostnm}_${today}.tar /root/*
 
-gsutil mv ${hostnm}_${today}.tar gs://gcp-in-ca-test-bucket-wocheon07/backup/vm_backups/
+gsutil mv ${hostnm}_${today}.tar gs://test-project-test-bucket-wocheon07/backup/vm_backups/
 ```
 
 - 메타데이터로 등록 후 확인
-shutdown-script-url - gs://gcp-in-ca-test-bucket-wocheon07/backup/backup_to_gcpbucket.sh
+shutdown-script-url - gs://test-project-test-bucket-wocheon07/backup/backup_to_gcpbucket.sh

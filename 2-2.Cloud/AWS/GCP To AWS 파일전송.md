@@ -171,12 +171,12 @@ please run:
 You are logged in as: [wocheon07@gmail.com].
 # 활성화할 GCP 프로젝트 선택
 Pick cloud project to use:
- [1] gcp-in-ca
+ [1] test-project
  [2] Enter a project ID
  [3] Create a new project
 Please enter numeric choice or text value (must exactly match list item):  1
 
-Your current project has been set to: [gcp-in-ca].
+Your current project has been set to: [test-project].
 
 Your project default Compute Engine zone has been set to [asia-northeast3-c].
 You can change it by running [gcloud config set compute/zone NAME].
@@ -190,17 +190,17 @@ Your Google Cloud SDK is configured and ready to use!
 - GCP 버킷 목록 확인
 ```bash
 $ gsutil ls
-gs://asia-northeast3.deploy-artifacts.gcp-in-ca.appspot.com/
+gs://asia-northeast3.deploy-artifacts.test-project.appspot.com/
 gs://cloud_sql_general_log_gcp_in_ca/
-gs://gcp-in-ca-test-bucket-wocheon07/
+gs://test-project-test-bucket-wocheon07/
 
-$ gsutil ls gs://gcp-in-ca-test-bucket-wocheon07/
-gs://gcp-in-ca-test-bucket-wocheon07/autopush.sh
-gs://gcp-in-ca-test-bucket-wocheon07/filestore.yaml
-gs://gcp-in-ca-test-bucket-wocheon07/startup_test.sh
-gs://gcp-in-ca-test-bucket-wocheon07/var_test.yml
-gs://gcp-in-ca-test-bucket-wocheon07/vm_info.txt
-gs://gcp-in-ca-test-bucket-wocheon07/backup/
+$ gsutil ls gs://test-project-test-bucket-wocheon07/
+gs://test-project-test-bucket-wocheon07/autopush.sh
+gs://test-project-test-bucket-wocheon07/filestore.yaml
+gs://test-project-test-bucket-wocheon07/startup_test.sh
+gs://test-project-test-bucket-wocheon07/var_test.yml
+gs://test-project-test-bucket-wocheon07/vm_info.txt
+gs://test-project-test-bucket-wocheon07/backup/
 ```
 
 - 파일 다운로드 진행 
@@ -208,9 +208,9 @@ gs://gcp-in-ca-test-bucket-wocheon07/backup/
 ```bash
 # 필요한경우 -m 옵션을 사용하면 병렬 다운로드 가능 
 # 다만 VM에 부하가 꽤 크므로 주의
-$ gsutil gs://gcp-in-ca-test-bucket-wocheon07/vm_info.txt .
+$ gsutil gs://test-project-test-bucket-wocheon07/vm_info.txt .
 
-Copying gs://gcp-in-ca-test-bucket-wocheon07/vm_info.txt...
+Copying gs://test-project-test-bucket-wocheon07/vm_info.txt...
 / [1 files][   30.0 B/   30.0 B]
 Operation completed over 1 objects/30.0 B.
 

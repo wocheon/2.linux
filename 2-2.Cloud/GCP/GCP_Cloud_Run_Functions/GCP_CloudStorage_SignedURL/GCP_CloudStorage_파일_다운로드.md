@@ -173,7 +173,7 @@ docker build -t data-insert-batch .
 docker run \
         #--network mariadb-network \ # DB를 docker로 실행한 경우 사용
         --name data-insert-batch \
-        -e BUCKET_NAME=gcp-in-ca-test-bucket-wocheon07 \
+        -e BUCKET_NAME=test-project-test-bucket-wocheon07 \
         -e DB_HOST=mariadb-main  \
         -e DB_USER=root \
         -e DB_PASSWORD=rootpass \
@@ -343,7 +343,7 @@ $ curl https://fn-calldb-buckect-file-list-487401709675.asia-northeast3.run.app 
  
 
 #### 환경 변수
-- BUCKET_NAME=gcp-in-ca-test-bucket-wocheon07
+- BUCKET_NAME=test-project-test-bucket-wocheon07
 - PROJECT_ID=xxxxxxx
 - SECRET_ID=account_key
 - BUCKET_ACCESS_MODE=PRIVATE
@@ -421,8 +421,8 @@ def cloud_function_handler(request):
 $ wget https://fn-calldb-buckect-file-url-redirect-487401709675.asia-northeast3.run.app/download/backup/backup_to_gcpbucket.sh
 .....
 HTTP request sent, awaiting response... 302 Found
-Location: https://storage.googleapis.com/gcp-in-ca-test-bucket-wocheon07/backup/backup_to_gcpbucket.sh?Expires=1757409593&GoogleAccessId=487401709675-compute%40developer.gserviceaccount.com&Signature=YmTzFIwdMqrSgi3hMBA%2BHwjMxvec%2Fgh%2BofzPR9ouBDEgNTteR4Ftl2DoiwrzeppGqAxX%2BF73YMQJkwb4Vyiyu%2FfskSfbRM%2FX%2BYsoX4gBNMEuKdl5%2F0t4YsfQMTJz9DYR649aQv%2B4%2BeHwjACpJmY2bVNiPOEKpe6mlPBwFoe2J%2Bjitva9GI%2FKVCaGT4suaj5iHIMerVaerRvJ9SGuIhddndTWSqk%2F0e06F6rPhzED6vkFUvhjJBkxb3wsGGeptE%2FzWetzDX9q7TBDkNw%2FrV2BAm9COi2PX2nb7eT5S6%2FDb47sSql5hGY7w4pr0RLkVdgEl1Kf6DcAMDbcXd5WE2Wu3Q%3D%3D [following]
---2025-09-09 18:04:53--  https://storage.googleapis.com/gcp-in-ca-test-bucket-wocheon07/backup/backup_to_gcpbucket.sh?Expires=1757409593&GoogleAccessId=487401709675-compute%40developer.gserviceaccount.com&Signature=YmTzFIwdMqrSgi3hMBA%2BHwjMxvec%2Fgh%2BofzPR9ouBDEgNTteR4Ftl2DoiwrzeppGqAxX%2BF73YMQJkwb4Vyiyu%2FfskSfbRM%2FX%2BYsoX4gBNMEuKdl5%2F0t4YsfQMTJz9DYR649aQv%2B4%2BeHwjACpJmY2bVNiPOEKpe6mlPBwFoe2J%2Bjitva9GI%2FKVCaGT4suaj5iHIMerVaerRvJ9SGuIhddndTWSqk%2F0e06F6rPhzED6vkFUvhjJBkxb3wsGGeptE%2FzWetzDX9q7TBDkNw%2FrV2BAm9COi2PX2nb7eT5S6%2FDb47sSql5hGY7w4pr0RLkVdgEl1Kf6DcAMDbcXd5WE2Wu3Q%3D%3D
+Location: https://storage.googleapis.com/test-project-test-bucket-wocheon07/backup/backup_to_gcpbucket.sh?Expires=1757409593&GoogleAccessId=487401709675-compute%40developer.gserviceaccount.com&Signature=YmTzFIwdMqrSgi3hMBA%2BHwjMxvec%2Fgh%2BofzPR9ouBDEgNTteR4Ftl2DoiwrzeppGqAxX%2BF73YMQJkwb4Vyiyu%2FfskSfbRM%2FX%2BYsoX4gBNMEuKdl5%2F0t4YsfQMTJz9DYR649aQv%2B4%2BeHwjACpJmY2bVNiPOEKpe6mlPBwFoe2J%2Bjitva9GI%2FKVCaGT4suaj5iHIMerVaerRvJ9SGuIhddndTWSqk%2F0e06F6rPhzED6vkFUvhjJBkxb3wsGGeptE%2FzWetzDX9q7TBDkNw%2FrV2BAm9COi2PX2nb7eT5S6%2FDb47sSql5hGY7w4pr0RLkVdgEl1Kf6DcAMDbcXd5WE2Wu3Q%3D%3D [following]
+--2025-09-09 18:04:53--  https://storage.googleapis.com/test-project-test-bucket-wocheon07/backup/backup_to_gcpbucket.sh?Expires=1757409593&GoogleAccessId=487401709675-compute%40developer.gserviceaccount.com&Signature=YmTzFIwdMqrSgi3hMBA%2BHwjMxvec%2Fgh%2BofzPR9ouBDEgNTteR4Ftl2DoiwrzeppGqAxX%2BF73YMQJkwb4Vyiyu%2FfskSfbRM%2FX%2BYsoX4gBNMEuKdl5%2F0t4YsfQMTJz9DYR649aQv%2B4%2BeHwjACpJmY2bVNiPOEKpe6mlPBwFoe2J%2Bjitva9GI%2FKVCaGT4suaj5iHIMerVaerRvJ9SGuIhddndTWSqk%2F0e06F6rPhzED6vkFUvhjJBkxb3wsGGeptE%2FzWetzDX9q7TBDkNw%2FrV2BAm9COi2PX2nb7eT5S6%2FDb47sSql5hGY7w4pr0RLkVdgEl1Kf6DcAMDbcXd5WE2Wu3Q%3D%3D
 Resolving storage.googleapis.com (storage.googleapis.com)... xxx.xxx.xxx.xxx, xxx.xxx.xxx.xxx, xxx.xxx.xxx.xxx, ...
 Connecting to storage.googleapis.com (storage.googleapis.com)|xxx.xxx.xxx.xxx|:443... connected.
 HTTP request sent, awaiting response... 200 OK
@@ -503,7 +503,7 @@ CMD ["functions-framework", "--target=cloud_function_handler", "--port=8080"]
 ```
 #!/bin/bash
 
-gar_repo="asia-northeast3-docker.pkg.dev/gcp-in-ca/cloud-run-source-deploy"
+gar_repo="asia-northeast3-docker.pkg.dev/test-project/cloud-run-source-deploy"
 function_name="fn-calldb-buckect-file-list"
 tag="latest"
 
@@ -521,7 +521,7 @@ docker push ${gar_repo}/${function_name}:${tag}
 ```
 #!/bin/bash
 
-gar_repo="asia-northeast3-docker.pkg.dev/gcp-in-ca/cloud-run-source-deploy"
+gar_repo="asia-northeast3-docker.pkg.dev/test-project/cloud-run-source-deploy"
 function_name="fn-calldb-buckect-file-list"
 tag="latest"
 

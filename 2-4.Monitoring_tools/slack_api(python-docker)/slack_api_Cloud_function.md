@@ -77,7 +77,7 @@ Google Cloud Functions에서 `os.getenv()`를 사용하여 가져오는 변수�
 - 트리거 (호출 URL 확인)하여 해당 URL로 호출  테스트 
 
 ```sh
-$ curl -X POST https://asia-northeast3-gcp-in-ca.cloudfunctions.net/slack-api -H "Content-Type: application/json" -d '{"text": "Hello from Cloud Function!"}'
+$ curl -X POST https://asia-northeast3-test-project.cloudfunctions.net/slack-api -H "Content-Type: application/json" -d '{"text": "Hello from Cloud Function!"}'
 
 {"channel":"C075QKNQZJN","message":{"app_id":"A075QGZPSUB","blocks":[{"block_id":"DA0","elements":[{"elements":[{"text":"Hello from Cloud Function!","type":"text"}],"type":"rich_text_section"}],"type":"rich_text"}],"bot_id":"B07Q9PEJZB2","bot_profile":{"app_id":"A075QGZPSUB","deleted":false,"icons":{"image_36":"https://a.slack-edge.com/80588/img/plugins/app/bot_36.png","image_48":"https://a.slack-edge.com/80588/img/plugins/app/bot_48.png","image_72":"https://a.slack-edge.com/80588/img/plugins/app/service_72.png"},"id":"B07Q9PEJZB2","name":"test-app","team_id":"T07639T5HFB","updated":1727680976},"team":"T07639T5HFB","text":"Hello from Cloud Function!","ts":"1727855635.534319","type":"message","user":"U076DDF2PHN"},"ok":true,"response_metadata":{"warnings":["missing_charset"]},"ts":"1727855635.534319","warning":"missing_charset"}
 ```

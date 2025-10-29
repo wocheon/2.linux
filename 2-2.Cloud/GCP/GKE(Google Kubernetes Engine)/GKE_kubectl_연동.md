@@ -133,8 +133,8 @@ Error from server (Forbidden): services "my-dep" is forbidden: User "daskete07@g
 ```    
  gcloud config configurations list
 NAME     IS_ACTIVE  ACCOUNT                                             PROJECT    COMPUTE_DEFAULT_ZONE  COMPUTE_DEFAULT_REGION
-default  True       487401709675-compute@developer.gserviceaccount.com  gcp-in-ca  asia-northeast3-c     asia-northeast3
-viewer   False      daskete07@gmail.com                                 gcp-in-ca  asia-northeast3-c     asia-northeast3 #viewr 권한 계정
+default  True       487401709675-compute@developer.gserviceaccount.com  test-project  asia-northeast3-c     asia-northeast3
+viewer   False      daskete07@gmail.com                                 test-project  asia-northeast3-c     asia-northeast3 #viewr 권한 계정
 ```
 
 - gke_gcloud_auth_plugin_cache 확인 후 삭제 

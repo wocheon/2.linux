@@ -151,9 +151,9 @@ gsutill cp gs://[버킷명]/[오브젝트명] [로컬에 저장할 파일명]
 
 * ISO파일 다운로드 
 ```
-gsutil cp gs://gcp-in-ca-vm-image/Windows.iso /var/lib/libvirt/images/windows10.iso
+gsutil cp gs://test-project-vm-image/Windows.iso /var/lib/libvirt/images/windows10.iso
 		
-gsutil cp gs://gcp-in-ca-vm-image/17763.3650.221105-1748.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso window_server_2019.iso
+gsutil cp gs://test-project-vm-image/17763.3650.221105-1748.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso window_server_2019.iso
 ```			
 
 

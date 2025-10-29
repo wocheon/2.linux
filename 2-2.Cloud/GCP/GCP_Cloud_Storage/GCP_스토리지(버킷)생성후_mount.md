@@ -47,11 +47,11 @@ sudo yum install -y gcsfuse
 ```bash
 $ gsutil ls
 
-gs://gcp-in-ca-daisy-bkt-asia-northeast3/
-gs://gcp-in-ca-test-bucket-wocheon07/
-gs://gcp-in-ca-vm-image/
-gs://gcp-in-ca.appspot.com/
-gs://staging.gcp-in-ca.appspot.com/
+gs://test-project-daisy-bkt-asia-northeast3/
+gs://test-project-test-bucket-wocheon07/
+gs://test-project-vm-image/
+gs://test-project.appspot.com/
+gs://staging.test-project.appspot.com/
 ```
 
 
@@ -65,11 +65,11 @@ mkdir /GCP_Storage
 
 ```bash
 #파일모드로 마운트
-gcsfuse —file–mode=755 gcp-in-ca-test-bucket-wocheon07 /GCP_Storage
-gcsfuse -o allow_other gcp-in-ca-test-bucket-wocheon07 /GCP_Storage
+gcsfuse —file–mode=755 test-project-test-bucket-wocheon07 /GCP_Storage
+gcsfuse -o allow_other test-project-test-bucket-wocheon07 /GCP_Storage
 
-mount -t gcsfuse -o allow_other gcp-in-ca-test-bucket-wocheon07 /GCP_Storage
-mount -t gcsfuse -o rw,user  gcp-in-ca-test-bucket-wocheon07 /GCP_Storage
+mount -t gcsfuse -o allow_other test-project-test-bucket-wocheon07 /GCP_Storage
+mount -t gcsfuse -o rw,user  test-project-test-bucket-wocheon07 /GCP_Storage
 ```
 
 
@@ -163,7 +163,7 @@ uid=1003(wocheon07) gid=1004(wocheon07)
 
 vi /etc/fstab
 ```
-gcp-in-ca-test-bucket-wocheon07 /GCP_Storage gcsfuse rw,_netdev,allow_other,uid=1003,gid=1004
+test-project-test-bucket-wocheon07 /GCP_Storage gcsfuse rw,_netdev,allow_other,uid=1003,gid=1004
 ```
 
 - 적용확인

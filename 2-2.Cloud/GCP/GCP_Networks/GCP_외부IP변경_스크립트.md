@@ -15,7 +15,7 @@
 
 ```sh
 #!/bin/bash
-project="gcp-in-ca"
+project="test-project"
 
 timestamp=$(date '+%y%m%d%H%M')
 
