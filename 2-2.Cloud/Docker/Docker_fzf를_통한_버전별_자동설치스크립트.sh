@@ -52,6 +52,6 @@ apt install -y docker-ce=${choice_package_version} docker-ce-cli=${choice_packag
 
 rm -rf docker_version_list.txt
 
-systmectl status docker 
+systemctl status docker 
 
 docker --version
