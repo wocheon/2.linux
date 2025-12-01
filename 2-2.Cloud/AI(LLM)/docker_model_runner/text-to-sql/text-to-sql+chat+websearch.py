@@ -1,7 +1,7 @@
 import pymysql
 from openai import OpenAI
 import re
-from duckduckgo_search import DDGS # 웹 검색용 라이브러리
+import ddgs # 웹 검색용 라이브러리
 
 # --- 설정 ---
 DB_CONFIG = {
@@ -75,7 +75,7 @@ def search_web(query):
     """[Tool] DuckDuckGo 웹 검색"""
     print(f"   🔎 웹 검색 실행 중: '{query}'...")
     try:
-        results = DDGS().text(query, max_results=3)
+        results = ddgs().text(query, max_results=3)
         summary = ""
         if not results:
             return "검색 결과가 없습니다."
