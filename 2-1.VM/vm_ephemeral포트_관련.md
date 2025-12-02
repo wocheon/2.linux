@@ -101,68 +101,130 @@ sysctl -w net.ipv4.ip_local_port_range="1024 65535"
 ```bash
 #!/bin/bash
 
-echo "==============================================="
-echo " 🔍 리눅스 Outbound Ephemeral Port 실제 사용 가능 개수 계산"
-echo "==============================================="
+# 사용법: ./check_port_limit.sh <TARGET_IP>
+TARGET_IP=$1
 
-# 1. ephemeral port 범위
-read MIN_PORT MAX_PORT < <(sysctl -n net.ipv4.ip_local_port_range)
-TOTAL=$((MAX_PORT - MIN_PORT + 1))
+# 색상 변수
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-echo "1) Ephemeral Port Range  : $MIN_PORT - $MAX_PORT"
-echo "   → 총 포트 개수        : $TOTAL"
-
-echo "-----------------------------------------------"
-
-# 2. 현재 ESTABLISHED/TIME_WAIT outbound 사용량
-ESTABLISHED=$(ss -ant | awk 'NR>1 && $1=="ESTAB"' | wc -l)
-TIMEWAIT=$(ss -ant | awk 'NR>1 && $1=="TIME-WAIT"' | wc -l)
-
-echo "2) 현재 ESTABLISHED 수   : $ESTABLISHED"
-echo "3) 현재 TIME_WAIT 수      : $TIMEWAIT"
-
-echo "-----------------------------------------------"
-
-# 3. LISTEN 중인 포트 - outbound와 직접 관계 없음
-LISTEN=$(ss -lnt | awk 'NR>1 {print $4}' | wc -l)
-echo "4) LISTEN 중인 포트 수   : $LISTEN"
-
-echo "-----------------------------------------------"
-
-# 4. 파일 디스크립터 제한 (socket은 FD 1개 사용)
-FD_SOFT=$(ulimit -n)
-FD_HARD=$(ulimit -Hn)
-
-echo "5) 파일 디스크립터 제한"
-echo "   - soft limit : $FD_SOFT"
-echo "   - hard limit : $FD_HARD"
-
-echo "-----------------------------------------------"
-
-# 5. 예약된 커널 내부 포트 (대략 500개 가정, 환경에 따라 조정 가능)
-RESERVED=500
-
-# 6. usable ports 계산
-USABLE=$((TOTAL - ESTABLISHED - TIMEWAIT - RESERVED))
-
-if (( USABLE < 0 )); then
-    USABLE=0
+if [ -z "$TARGET_IP" ]; then
+    echo -e "${RED}사용법 오류: 분석할 타겟 IP를 입력해주세요.${NC}"
+    echo "예: ./check_port_limit.sh 1.2.3.4"
+    exit 1
 fi
 
-echo "6) 실제 사용 가능 Outbound Ephemeral Ports 예상:"
-echo "   → $USABLE 개 사용 가능 (추정)"
-
-echo "-----------------------------------------------"
-
-# 7. NAT 환경인지 확인 (도커, GCP 등)
-if ip r | grep -q "docker0"; then
-    echo "⚠️ Docker NAT 환경 감지됨 → usable 포트가 40~70%로 감소할 수 있음."
+# netstat 체크
+if ! command -v netstat &> /dev/null; then
+    echo -e "${RED}Error: 'netstat' 명령어가 없습니다. (yum install net-tools 또는 apt install net-tools)${NC}"
+    exit 1
 fi
 
-if curl -s http://metadata.google.internal >/dev/null 2>&1; then
-    echo "⚠️ GCP VM 감지됨 → NAT일 경우 20~40% usable 감소 가능."
+echo -e "${BLUE}========================================================${NC}"
+echo -e "${BLUE} 🔍 Port Exhaustion Analyzer (Target: $TARGET_IP)${NC}"
+echo -e "${BLUE}========================================================${NC}"
+
+# ==========================================
+# 1. 물리적 한계치 정밀 계산 (Real Limit)
+# ==========================================
+
+# 1-1. 기본 범위
+MIN_PORT=$(sysctl -n net.ipv4.ip_local_port_range | awk '{print $1}')
+MAX_PORT=$(sysctl -n net.ipv4.ip_local_port_range | awk '{print $2}')
+THEORETICAL_LIMIT=$((MAX_PORT - MIN_PORT + 1))
+
+# 1-2. 커널 예약 포트 (Reserved) 제외
+RESERVED_PORTS=$(sysctl -n net.ipv4.ip_local_reserved_ports)
+RESERVED_COUNT=0
+
+if [ -n "$RESERVED_PORTS" ]; then
+    IFS=',' read -ra RANGES <<< "$RESERVED_PORTS"
+    for RANGE in "${RANGES[@]}"; do
+        if [[ "$RANGE" == *-* ]]; then
+            START=${RANGE%-*}
+            END=${RANGE#*-}
+        else
+            START=$RANGE
+            END=$RANGE
+        fi
+        
+        # 교집합 구간 계산
+        REAL_START=$(( START > MIN_PORT ? START : MIN_PORT ))
+        REAL_END=$(( END < MAX_PORT ? END : MAX_PORT ))
+        
+        if (( REAL_START <= REAL_END )); then
+            COUNT=$(( REAL_END - REAL_START + 1 ))
+            RESERVED_COUNT=$(( RESERVED_COUNT + COUNT ))
+        fi
+    done
 fi
 
-echo "==============================================="
+# 1-3. Listen 중인 포트 제외 (netstat 기반)
+LISTEN_IN_RANGE=$(netstat -tln | awk -v min="$MIN_PORT" -v max="$MAX_PORT" '
+    /^tcp/ {
+        split($4, a, ":");
+        port = a[length(a)];
+        if (port >= min && port <= max) count++;
+    }
+    END { print count+0 }
+')
 
+# 1-4. 최종 한계치 도출
+REAL_LIMIT=$(( THEORETICAL_LIMIT - RESERVED_COUNT - LISTEN_IN_RANGE ))
+
+echo -e "1. 시스템 포트 한계치 분석"
+echo "   👉 범위 설정 : $MIN_PORT ~ $MAX_PORT (총 $THEORETICAL_LIMIT 개)"
+echo "   👉 차감 요소 : 예약됨(-$RESERVED_COUNT), 리스닝중(-$LISTEN_IN_RANGE)"
+echo -e "   👉 ${GREEN}최종 가용 한계(Max Limit) : $REAL_LIMIT 개${NC}"
+echo "--------------------------------------------------------"
+
+# ==========================================
+# 2. 타겟 IP 연결 상태 분석 (Target Analysis)
+# ==========================================
+
+# 2-1. 해당 IP와 맺은 전체 세션 수 확인
+CURRENT_CONN=$(netstat -tn | grep "$TARGET_IP" | wc -l)
+
+# 2-2. 상태별 상세 분석 (가장 중요한 CLOSE_WAIT 확인)
+CONN_ESTAB=$(netstat -tn | grep "$TARGET_IP" | grep "ESTABLISHED" | wc -l)
+CONN_CLOSE=$(netstat -tn | grep "$TARGET_IP" | grep "CLOSE_WAIT" | wc -l)
+CONN_TIME=$(netstat -tn | grep "$TARGET_IP" | grep "TIME_WAIT" | wc -l)
+
+echo -e "2. 타겟($TARGET_IP) 연결 현황"
+echo -e "   👉 현재 총 연결 수 : $CURRENT_CONN 개"
+echo "      ├─ ESTABLISHED : $CONN_ESTAB"
+echo -e "      ├─ ${RED}CLOSE_WAIT  : $CONN_CLOSE${NC} (앱이 안 닫음)"
+echo "      └─ TIME_WAIT   : $CONN_TIME (OS가 대기 중)"
+echo "--------------------------------------------------------"
+
+# ==========================================
+# 3. 최종 진단 (Conclusion)
+# ==========================================
+
+REMAINING=$(( REAL_LIMIT - CURRENT_CONN ))
+PERCENT=$(awk "BEGIN {printf \"%.2f\", ($CURRENT_CONN/$REAL_LIMIT)*100}")
+
+echo -e "3. 최종 진단 결과"
+echo "   👉 포트 점유율 : $PERCENT% ($CURRENT_CONN / $REAL_LIMIT)"
+
+echo ""
+if (( REMAINING <= 0 )); then
+    echo -e "   🚨 ${RED}[CRITICAL] 연결 불가 (Source Port Exhaustion)${NC}"
+    echo "      원인: 이 IP($TARGET_IP)로 할당 가능한 모든 소스 포트를 소진했습니다."
+    echo "      분석: 잔여 포트가 $REMAINING개 입니다. (음수면 이미 초과)"
+    if (( CONN_CLOSE > 1000 )); then
+        echo "      👉 범인은 CLOSE_WAIT($CONN_CLOSE 개)입니다. 프로세스 재기동이 필요합니다."
+    fi
+elif (( REMAINING < 100 )); then
+    echo -e "   🟠 ${YELLOW}[WARNING] 고갈 임박! (잔여: $REMAINING 개)${NC}"
+    echo "      곧 연결 실패가 발생할 수 있습니다."
+else
+    echo -e "   🟢 ${GREEN}[SAFE] 정상 상태 (잔여: $REMAINING 개)${NC}"
+    echo "      포트 문제는 아닙니다. 연결이 안 된다면 방화벽을 의심하세요."
+fi
+
+echo -e "${BLUE}========================================================${NC}"
 ```
