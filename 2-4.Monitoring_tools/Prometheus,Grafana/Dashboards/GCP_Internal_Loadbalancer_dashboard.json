@@ -1,0 +1,1418 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_STACKDRIVER",
+      "label": "stackdriver",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "stackdriver",
+      "pluginName": "Google Cloud Monitoring"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.3.1"
+    },
+    {
+      "type": "datasource",
+      "id": "stackdriver",
+      "name": "Google Cloud Monitoring",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 23,
+      "panels": [
+        {
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 11,
+            "x": 0,
+            "y": 1
+          },
+          "id": 21,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "<h2>GCP Internal LB Dashborard</h2>\n\n### 모니터링 항목\n\n|\t구분\t  | 메트릭                       | 설명                                                                       |\n|---------| ------------------------- | ------------------------------------------------------------------------ |\n|LB Total| **Total Request Count**   | Load Balancer가 수신한 **클라이언트 요청 총 수** (백엔드 전달 여부와 무관)                  |\n|LB Total| **Total Latency**         | 클라이언트 요청을 수신한 시점부터 **백엔드 응답이 완료되고, 최종 응답을 클라이언트에게 전송 완료할 때까지의 총 시간** |\n|LB Total| **Total HTTP Code Count** | Load Balancer가 **클라이언트에게 최종 반환한 HTTP 상태 코드별 요청 수**|\n|LB Total| **Total Request Bytes**   | Load Balancer가 수신한 **클라이언트 요청 데이터**|\n|LB Total| **Total Response Bytes**  | Load Balancer가 클라이언트에게 전송한 **응답 데이터**|\n|LB Backend| **Backend Request Count**   | Load Balancer가 실제 **백엔드에 전달한 요청 수**. Total과 차이 발생 가능 (예: 캐시 히트, 오류 등) |\n|LB Backend| **Backend Latency**         | 요청이 Load Balancer에서 백엔드로 전달된 이후, **백엔드 응답을 수신하기까지 걸린 시간**.                 |\n|LB Backend| **Backend HTTP Code Count** | **백엔드에서 반환한 HTTP 상태 코드별 요청 수** LB는 이를 바탕으로 최종 상태 코드를 결정|\n|LB Backend| **Backend Request Bytes**   | Load Balancer가 백엔드에 전달한 요청 데이터|\n|LB Backend| **Backend Response Bytes**  | Load Balancer가 백엔드에서 수신한 응답 데이터|",
+            "mode": "markdown"
+          },
+          "pluginVersion": "11.5.1",
+          "title": "",
+          "type": "text"
+        },
+        {
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 13,
+            "x": 11,
+            "y": 1
+          },
+          "id": 24,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "## GCP LB/GCP LB Backend 메트릭 간 차이점\n- Total : 클라이언트와 LB 사이를 포함한 **전체 흐름**\n- Backend : LB와 백엔드 사이의 통신만 포함한 **내부 처리**\n\n| 메트릭 유형                                               | **Total** 메트릭                                  | **Backend** 메트릭                          | **차이점 요약**                                                         |\n| --------------------------------------------------- | ---------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |\n| **Latency**               | Client → LB → Backend → LB → Client까지의 총 왕복 시간 | LB → Backend → LB의 시간 (백엔드 요청 처리에 걸린 시간) | **총 응답 시간 중 백엔드 이외 구간**(클라이언트 ↔ LB)을 제외한 내부 처리 시간만 측정              |\n| **Request Count**   | 클라이언트에서 LB로 들어온 요청 수                           | LB에서 실제 백엔드로 전달된 요청 수                    | LB에서 차단된 요청(예: 403, redirect, cache-hit 등)은 **백엔드로 전달되지 않아 차이 발생** |\n| **Request Bytes**   | 클라이언트가 LB로 전송한 전체 요청 바이트                       | LB가 백엔드로 전송한 요청 바이트                      | LB가 일부 요청을 **처리하거나 수정**했을 경우 크기 차이 발생                              |\n| **Response Bytes** | LB가 클라이언트에게 반환한 전체 응답 바이트                      | 백엔드가 LB로 반환한 응답 바이트                      | LB가 응답을 **압축하거나 캐시에서 직접 반환**하는 경우 차이 발생                            |",
+            "mode": "markdown"
+          },
+          "pluginVersion": "11.5.1",
+          "title": "",
+          "type": "text"
+        }
+      ],
+      "title": "Dashboard Description",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 18,
+      "panels": [],
+      "title": "GCP Internal Load Balancer",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short",
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 2
+      },
+      "id": 1,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [
+            "min",
+            "max",
+            "mean",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "width": 220
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "aliasBy": "Request Counts",
+          "datasource": {
+            "type": "stackdriver",
+            "uid": "${DS_STACKDRIVER}"
+          },
+          "hide": false,
+          "metricQuery": {
+            "aliasBy": "",
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.type",
+              "=",
+              "https_lb_rule"
+            ],
+            "groupBys": [
+              "resource.label.url_map_name"
+            ],
+            "metricKind": "DELTA",
+            "metricType": "loadbalancing.googleapis.com/https/request_count",
+            "perSeriesAligner": "ALIGN_RATE",
+            "projectName": "$project",
+            "unit": "1",
+            "valueType": "INT64"
+          },
+          "queryType": "timeSeriesList",
+          "refId": "A",
+          "timeSeriesList": {
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.label.url_map_name",
+              "=~",
+              ".*${LB_NAME}$",
+              "AND",
+              "metric.type",
+              "=",
+              "loadbalancing.googleapis.com/https/internal/request_count"
+            ],
+            "groupBys": [
+              "resource.label.url_map_name"
+            ],
+            "perSeriesAligner": "ALIGN_DELTA",
+            "preprocessor": "none",
+            "projectName": "$project"
+          }
+        },
+        {
+          "aliasBy": "",
+          "datasource": {
+            "type": "stackdriver",
+            "uid": "${DS_STACKDRIVER}"
+          },
+          "hide": false,
+          "metricQuery": {
+            "aliasBy": "",
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.type",
+              "=",
+              "https_lb_rule"
+            ],
+            "groupBys": [
+              "resource.label.url_map_name"
+            ],
+            "metricKind": "DELTA",
+            "metricType": "loadbalancing.googleapis.com/https/request_count",
+            "perSeriesAligner": "ALIGN_RATE",
+            "projectName": "$project",
+            "unit": "1",
+            "valueType": "INT64"
+          },
+          "queryType": "timeSeriesList",
+          "refId": "B",
+          "timeSeriesList": {
+            "alignmentPeriod": "grafana-auto",
+            "crossSeriesReducer": "REDUCE_MEAN",
+            "filters": [
+              "metric.label.lbName",
+              "=",
+              "$LB_NAME",
+              "AND",
+              "metric.type",
+              "=",
+              "logging.googleapis.com/user/xxxx_application_lb_internal_log_latency"
+            ],
+            "groupBys": [
+              "metric.label.lbName"
+            ],
+            "perSeriesAligner": "ALIGN_DELTA",
+            "preprocessor": "none",
+            "projectName": "$project"
+          }
+        }
+      ],
+      "title": "GCP Internal LB - Total Request Count(Metric) & HTTPRequest.Latency(log)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short",
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "id": 27,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [
+            "min",
+            "max",
+            "mean",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "width": 220
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "aliasBy": "HTTP Code - {{metric.label.response_code}}",
+          "datasource": {
+            "type": "stackdriver",
+            "uid": "${DS_STACKDRIVER}"
+          },
+          "metricQuery": {
+            "aliasBy": "",
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.type",
+              "=",
+              "https_lb_rule"
+            ],
+            "groupBys": [
+              "resource.label.url_map_name"
+            ],
+            "metricKind": "DELTA",
+            "metricType": "loadbalancing.googleapis.com/https/request_count",
+            "perSeriesAligner": "ALIGN_RATE",
+            "projectName": "$project",
+            "unit": "1",
+            "valueType": "INT64"
+          },
+          "queryType": "timeSeriesList",
+          "refId": "A",
+          "timeSeriesList": {
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.label.url_map_name",
+              "=~",
+              ".*${LB_NAME}$",
+              "AND",
+              "metric.type",
+              "=",
+              "loadbalancing.googleapis.com/https/internal/request_count"
+            ],
+            "groupBys": [
+              "metric.label.response_code"
+            ],
+            "perSeriesAligner": "ALIGN_DELTA",
+            "preprocessor": "none",
+            "projectName": "$project"
+          }
+        }
+      ],
+      "title": "GCP Internal LB - Total HTTP Code Count",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "stackdriver",
+        "uid": "${DS_STACKDRIVER}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "min",
+            "max",
+            "mean",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "aliasBy": "Total Request Bytes",
+          "datasource": {
+            "type": "stackdriver",
+            "uid": "${DS_STACKDRIVER}"
+          },
+          "queryType": "timeSeriesList",
+          "refId": "A",
+          "timeSeriesList": {
+            "alignmentPeriod": "cloud-monitoring-auto",
+            "crossSeriesReducer": "REDUCE_NONE",
+            "filters": [
+              "resource.label.url_map_name",
+              "=~",
+              ".*${LB_NAME}$",
+              "AND",
+              "metric.type",
+              "=",
+              "loadbalancing.googleapis.com/https/internal/request_bytes_count"
+            ],
+            "groupBys": [],
+            "perSeriesAligner": "ALIGN_NONE",
+            "preprocessor": "rate",
+            "projectName": "project",
+            "view": "FULL"
+          }
+        }
+      ],
+      "title": "GCP Internal LB - Total Request Bytes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "stackdriver",
+        "uid": "${DS_STACKDRIVER}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [
+            "min",
+            "max",
+            "mean",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "aliasBy": "Total Response Bytes",
+          "datasource": {
+            "type": "stackdriver",
+            "uid": "${DS_STACKDRIVER}"
+          },
+          "queryType": "timeSeriesList",
+          "refId": "A",
+          "timeSeriesList": {
+            "alignmentPeriod": "cloud-monitoring-auto",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.label.url_map_name",
+              "=~",
+              ".*${LB_NAME}$",
+              "AND",
+              "metric.type",
+              "=",
+              "loadbalancing.googleapis.com/https/internal/response_bytes_count"
+            ],
+            "groupBys": [],
+            "perSeriesAligner": "ALIGN_DELTA",
+            "preprocessor": "none",
+            "projectName": "project",
+            "view": "FULL"
+          }
+        }
+      ],
+      "title": "GCP Internal LB - Total Response Bytes",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 17,
+      "panels": [],
+      "title": "GCP Internal Load Balancer - Backend",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 19,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [
+            "min",
+            "max",
+            "mean",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "width": 220
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "aliasBy": "Backend Request Counts",
+          "datasource": {
+            "type": "stackdriver",
+            "uid": "${DS_STACKDRIVER}"
+          },
+          "metricQuery": {
+            "aliasBy": "",
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.type",
+              "=",
+              "https_lb_rule"
+            ],
+            "groupBys": [
+              "resource.label.url_map_name"
+            ],
+            "metricKind": "DELTA",
+            "metricType": "loadbalancing.googleapis.com/https/request_count",
+            "perSeriesAligner": "ALIGN_RATE",
+            "projectName": "$project",
+            "unit": "1",
+            "valueType": "INT64"
+          },
+          "queryType": "timeSeriesList",
+          "refId": "A",
+          "timeSeriesList": {
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.label.url_map_name",
+              "=~",
+              ".*${LB_NAME}$",
+              "AND",
+              "metric.type",
+              "=",
+              "loadbalancing.googleapis.com/https/internal/backend_request_count"
+            ],
+            "groupBys": [
+              "resource.label.url_map_name"
+            ],
+            "perSeriesAligner": "ALIGN_DELTA",
+            "preprocessor": "none",
+            "projectName": "$project"
+          }
+        },
+        {
+          "aliasBy": "Backend Latency",
+          "datasource": {
+            "type": "stackdriver",
+            "uid": "${DS_STACKDRIVER}"
+          },
+          "hide": false,
+          "metricQuery": {
+            "aliasBy": "",
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.type",
+              "=",
+              "https_lb_rule"
+            ],
+            "groupBys": [
+              "resource.label.url_map_name"
+            ],
+            "metricKind": "DELTA",
+            "metricType": "loadbalancing.googleapis.com/https/request_count",
+            "perSeriesAligner": "ALIGN_RATE",
+            "projectName": "$project",
+            "unit": "1",
+            "valueType": "INT64"
+          },
+          "queryType": "timeSeriesList",
+          "refId": "B",
+          "timeSeriesList": {
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.label.url_map_name",
+              "=~",
+              ".*${LB_NAME}$",
+              "AND",
+              "metric.type",
+              "=",
+              "loadbalancing.googleapis.com/https/internal/backend_latencies"
+            ],
+            "groupBys": [],
+            "perSeriesAligner": "ALIGN_PERCENTILE_99",
+            "preprocessor": "none",
+            "projectName": "$project"
+          }
+        }
+      ],
+      "title": "GCP Internal LB - Backend Request Count & Backend Latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "id": 13,
+      "options": {
+        "alertThreshold": true,
+        "legend": {
+          "calcs": [
+            "min",
+            "max",
+            "mean",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "width": 220
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "aliasBy": "Backend HTTP Code - {{metric.label.response_code}}",
+          "datasource": {
+            "type": "stackdriver",
+            "uid": "${DS_STACKDRIVER}"
+          },
+          "hide": false,
+          "metricQuery": {
+            "aliasBy": "",
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.type",
+              "=",
+              "https_lb_rule"
+            ],
+            "groupBys": [
+              "resource.label.url_map_name"
+            ],
+            "metricKind": "DELTA",
+            "metricType": "loadbalancing.googleapis.com/https/request_count",
+            "perSeriesAligner": "ALIGN_RATE",
+            "projectName": "$project",
+            "unit": "1",
+            "valueType": "INT64"
+          },
+          "queryType": "timeSeriesList",
+          "refId": "B",
+          "timeSeriesList": {
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.label.url_map_name",
+              "=~",
+              ".*${LB_NAME}$",
+              "AND",
+              "metric.type",
+              "=",
+              "loadbalancing.googleapis.com/https/internal/backend_request_count"
+            ],
+            "groupBys": [
+              "metric.label.response_code"
+            ],
+            "perSeriesAligner": "ALIGN_DELTA",
+            "preprocessor": "none",
+            "projectName": "$project"
+          }
+        }
+      ],
+      "title": "GCP Internal LB - Backend HTTP Code Count ",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "stackdriver",
+        "uid": "${DS_STACKDRIVER}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 45
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "min",
+            "max",
+            "mean",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "aliasBy": "Backend Request Bytes",
+          "datasource": {
+            "type": "stackdriver",
+            "uid": "${DS_STACKDRIVER}"
+          },
+          "queryType": "timeSeriesList",
+          "refId": "A",
+          "timeSeriesList": {
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.label.url_map_name",
+              "=~",
+              ".*${LB_NAME}$",
+              "AND",
+              "metric.type",
+              "=",
+              "loadbalancing.googleapis.com/https/internal/backend_response_bytes_count"
+            ],
+            "groupBys": [],
+            "perSeriesAligner": "ALIGN_DELTA",
+            "preprocessor": "none",
+            "projectName": "project",
+            "view": "FULL"
+          }
+        }
+      ],
+      "title": "GCP Internal LB - Backend Request Bytes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "stackdriver",
+        "uid": "${DS_STACKDRIVER}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 45
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [
+            "min",
+            "max",
+            "mean",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "aliasBy": "Backend Response Bytes",
+          "datasource": {
+            "type": "stackdriver",
+            "uid": "${DS_STACKDRIVER}"
+          },
+          "queryType": "timeSeriesList",
+          "refId": "A",
+          "timeSeriesList": {
+            "alignmentPeriod": "$alignmentPeriod",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "filters": [
+              "resource.label.url_map_name",
+              "=~",
+              ".*${LB_NAME}$",
+              "AND",
+              "metric.type",
+              "=",
+              "loadbalancing.googleapis.com/https/internal/backend_response_bytes_count"
+            ],
+            "groupBys": [],
+            "perSeriesAligner": "ALIGN_MEAN",
+            "preprocessor": "none",
+            "projectName": "project",
+            "view": "FULL"
+          }
+        }
+      ],
+      "title": "GCP Internal LB - Backend Response Bytes",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "Networking",
+    "Cloud Monitoring",
+    "GCP"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "stackdriver",
+          "value": "cb1477ad-a318-4e4d-80f3-a8efc8aed1ae"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "stackdriver",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "stackdriver",
+          "uid": "${DS_STACKDRIVER}"
+        },
+        "definition": "Google Cloud Monitoring - Projects",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Project",
+        "multi": false,
+        "name": "project",
+        "options": [],
+        "query": {
+          "labelKey": "",
+          "loading": false,
+          "projectName": "$project",
+          "projects": [],
+          "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+          "selectedQueryType": "projects",
+          "selectedSLOService": "",
+          "selectedService": "actions.googleapis.com",
+          "sloServices": []
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "stackdriver",
+          "uid": "${DS_STACKDRIVER}"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": "LB_NAME",
+        "multi": false,
+        "name": "LB_NAME",
+        "options": [],
+        "query": {
+          "labelKey": "resource.label.url_map_name",
+          "loading": false,
+          "projectName": "$project",
+          "projects": [
+            {
+              "label": "PROJECT",
+              "value": "project"
+            }
+          ],
+          "refId": "CloudMonitoringVariableQueryEditor-VariableQuery",
+          "selectedMetricType": "loadbalancing.googleapis.com/https/internal/backend_request_count",
+          "selectedQueryType": "labelValues",
+          "selectedSLOService": "",
+          "selectedService": "loadbalancing.googleapis.com",
+          "sloServices": []
+        },
+        "refresh": 1,
+        "regex": "URL_MAP\\/[0-9]+_(.*)",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "stackdriver",
+          "uid": "${DS_STACKDRIVER}"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Alignment Period",
+        "multi": false,
+        "name": "alignmentPeriod",
+        "options": [],
+        "query": {
+          "labelKey": "",
+          "loading": false,
+          "projectName": "$project",
+          "projects": [
+            {
+              "label": "PROJECT",
+              "value": "project"
+            }
+          ],
+          "refId": "CloudMonitoringVariableQueryEditor-VariableQuery",
+          "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+          "selectedQueryType": "alignmentPeriods",
+          "selectedSLOService": "",
+          "selectedService": "actions.googleapis.com",
+          "sloServices": []
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "GCP Internal LB Dashboard",
+  "uid": "feot6fdwf1erkb1",
+  "version": 1,
+  "weekStart": ""
+}
