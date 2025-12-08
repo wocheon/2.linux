@@ -3851,7 +3851,7 @@
               {
                 "matcher": {
                   "id": "byName",
-                  "options": "100 - (avg(rate(node_cpu_seconds_total{instance=~\"10.2.90.130:9100\",mode=\"idle\"}[30s])) * 100)"
+                  "options": "100 - (avg(rate(node_cpu_seconds_total{instance=~\"10.1.1.130:9100\",mode=\"idle\"}[30s])) * 100)"
                 },
                 "properties": [
                   {
