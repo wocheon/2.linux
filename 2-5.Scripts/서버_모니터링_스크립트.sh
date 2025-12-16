@@ -32,7 +32,7 @@ top -b -n 1 | head -5
 #if [ $os = "Ubuntu" ]; then
 #    bg_blue "*CPU Usage (%) : $( mpstat | tail -1 | awk '{print 100-$NF}')"
 #else
-    bg_blue "*CPU Usage (%) : $(top -b -n1 | grep -Po '[0-9.]+ id' | awk '{print 100-$1}' | head -1)"
+    bg_blue "*CPU Usage (%) : $(top -bn2 -d 1 | grep '^%Cpu' | tail -n 1 | grep -Po '[0-9.]+(?=\s+id)' | awk '{print 100-$1}')"
 #fi
 
 #echo "#mpstat (CPU Usage Detail)"
