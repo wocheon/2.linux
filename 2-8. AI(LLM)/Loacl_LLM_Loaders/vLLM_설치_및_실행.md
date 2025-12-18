@@ -33,6 +33,7 @@ pip install vllm
 ```
 
 ### **B. Linux (Docker) - *Recommended***
+- NVIDIA Container Toolkit 설치 필요
 ```bash
 # Docker로 실행 시 별도 설치 없이 이미지로 바로 실행 가능합니다.
 docker run --runtime nvidia --gpus all \
@@ -80,6 +81,21 @@ python -m vllm.entrypoints.openai.api_server \
         --tensor-parallel-size 1 \
         --port 8000
     ```
+
+### 3. 로컬 모델 실행 (docker)
+- NVIDIA Container Toolkit 설치 필요
+```sh
+docker run --runtime nvidia --gpus all \
+    -v /home/user/models/Qwen2.5-3B-Instruct-AWQ:/models \
+    -p 8000:8000 \
+    --ipc=host \
+    vllm/vllm-openai:latest \
+    --model /models \
+    --served-model-name qwen-local \
+    --dtype auto \
+    --trust-remote-code
+```
+
 
 ***
 
