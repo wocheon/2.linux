@@ -55,7 +55,7 @@ Ollama는 모델을 `pull` 명령어로 받아두면 API가 자동으로 활성�
     ```
     *(참고: 사용자가 언급한 `qwen3:4b`가 출시되면 `ollama run qwen3:4b`로 변경)*
 
-### 2.로컬모델 실행 (CLI)
+### 2.로컬 모델 실행 (CLI)
 
 -  Ollama는 `GGUF` 파일만 인식
     - 로컬 GGUF 파일을 사용하려면 `Modelfile`을 작성하여 Ollama 내부 레지스트리에 등록`(Build)`필요

@@ -37,6 +37,7 @@ chmod +x LM-Studio-*.AppImage
 
 ## 모델 실행 방법
 - LM Studio는 GUI에서 로컬 서버를 켜는 방식
+- `lms` 명령을 통해 CLI를 사용가능
 
 ### **1. 모델 실행 (GUI)**
   *   좌측 돋보기 아이콘 클릭 -> `Qwen 2.5 3B` 검색.
@@ -45,7 +46,7 @@ chmod +x LM-Studio-*.AppImage
   *   **좌측 메뉴 중 `<->` (Local Server) 아이콘 클릭 -> [Start Server] 버튼 클릭.**
 
 
-### **2. 모델 실행 (GUI)**
+### **2. 로컬 모델 실행 (GUI)**
 - LM Studio는 특정 폴더를 "모델 스캔 경로"로 지정하면, 그 안의 GGUF 파일들을 자동으로 인식
 
 -  **A. 로컬 모델 준비**
@@ -58,6 +59,81 @@ chmod +x LM-Studio-*.AppImage
     3.  목록에 모델이 뜨면 **Load** 버튼을 눌러 메모리에 올립니다.
     4.  좌측 메뉴의 **Server(양방향 화살표 아이콘)** 탭으로 이동 -> **[Start Server]** 클릭.
 
+
+### **3. 모델 실행 (CLI)**
+
+- **1. `lms` CLI 설치 및 설정 (Bootstrap)**
+    - A. Mac / Linux
+        - `lms` 명령어를 부트스트랩
+        ```bash
+        # LM Studio가 설치된 상태에서 실행
+        ~/.cache/lm-studio/bin/lms bootstrap
+        ```
+    - **B. Windows (PowerShell)**
+        - CMD나 PowerShell에서 `lms bootstrap`를 통해 환경 변수 Path에 추가
+        ```powershell
+        # 사용자 계정 폴더 내 위치 확인
+        C:\Users\%USERNAME%\.cache\lm-studio\bin\lms.exe bootstrap
+        ```
+-  **2. 모델 검색 (Search)**
+    - 터미널에서 바로 Hugging Face의 GGUF 모델을 검색할 수 있습니다.
+        ```bash
+        lms search "qwen 2.5 3b"
+        ```
+- **3. 모델 다운로드 (Download)**
+    - 원하는 모델을 선택하여 다운로드 (양자화 옵션 지정 가능)
+    ```bash
+    # 가장 인기 있는 양자화 버전(보통 Q4_K_M) 자동 선택
+    lms get lmstudio-community/Qwen2.5-3B-Instruct-GGUF
+
+    # 특정 파일 지정 다운로드 (예: Q4_K_M)
+    lms get lmstudio-community/Qwen2.5-3B-Instruct-GGUF --file "Q4_K_M"
+    ```
+
+- **4. 로컬 서버 실행 (Server Start)**
+    - 모델을 로드하고 API 서버를 띄웁니다.
+
+    ```bash
+    # 기본 포트(1234)로 서버 시작 및 모델 로드
+    lms server start --model lmstudio-community/Qwen2.5-3B-Instruct-GGUF
+    ```
+    *   **주요 옵션**:
+        *   `--port 8080`: 포트 변경
+        *   `--cors=true`: CORS 허용 (웹앱 연동 시 필수)
+        *   `--gpu=max`: GPU 오프로딩 최대화 (기본값은 자동 감지이나, 명시하는 것이 좋음)
+        *   `--context-length 4096`: 컨텍스트 윈도우 크기 설정
+
+- **5. 모델 언로드 및 서버 종료**
+    - 더이상 실행하지 않는 모델이 있거나 서버 종료 필요 시
+    ```bash
+    # 실행 중인 모델 내리기
+    lms unload
+
+    # 서버 완전히 종료
+    lms server stop
+    ```
+
+### **4. 로컬 모델 실행 (CLI)**
+- **A. `lms load`로 직접 경로 지정 (가장 간편)**
+    - gguf 파일을 사용하여 즉시 로드
+    ```bash
+    # 사용법: lms load <GGUF_파일_절대_경로>
+    lms load /Users/myuser/Downloads/my-custom-model.gguf
+    ```
+
+- **B. lms import` 후 실행 (정석적인 관리)**
+    - 모델을 LM Studio의 전용 관리 폴더(`~/.cache/lm-studio/models`)로 이동
+    후 import하여 사용 
+        -  `--copy` 옵션이 없으면 기본적으로 파일을 **이동(Move)**
+        -  임포트가 성공하면 해당 모델의 **식별자(Model Key)**가 출력 (예: `user/my-model`)
+
+    ```bash
+    # 파일을 LM Studio 모델 저장소로 이동(Move) 또는 복사(Copy)
+    lms import /path/to/my-model.gguf --copy
+
+    # 임포트된 모델 로드
+    lms load user/my-model
+    ```
 
 ***
 

@@ -61,7 +61,7 @@ python -m vllm.entrypoints.openai.api_server \
     --api-key secret-key
 ```
 
-### 2.로컬모델 실행 (CLI)
+### 2. 로컬 모델 실행 (CLI)
 - vLLM은 모델 폴더 경로를 직접 지정하면 인터넷(Hugging Face) 연결 없이도 로컬 파일을 로드
 - 주로 `safetensors` 또는 `pytorch_model.bin` 형식을 사용
 
