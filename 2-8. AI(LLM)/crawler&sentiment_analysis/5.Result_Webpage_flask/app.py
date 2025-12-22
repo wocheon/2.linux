@@ -1,138 +1,149 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, abort, request
 import pymysql
 import configparser
 from collections import OrderedDict
 
 app = Flask(__name__)
 
-# config.ini 경로는 실제 위치에 맞게 조정하세요.
-config = configparser.ConfigParser()
-config.read('config.ini')  # 기본 경로가 app.py 위치 기준
+# --- Config 로드 ---
+# interpolation=None: % 문자 에러 방지
+config = configparser.ConfigParser(interpolation=None)
+config.read('config.ini')
 
-db_config = {
-    'host': config.get('database', 'host'),
-    'user': config.get('database', 'user'),
-    'password': config.get('database', 'password'),
-    'db': config.get('database', 'db'),
-    'charset': config.get('database', 'charset')
-}
-
-kobert_query = config.get('queries', 'kobert_query')
-koelectra_query = config.get('queries', 'koelectra_query')
+db_config = dict(config['database'])
+model_data_query = config.get('queries', 'model_data_query')
 model_comparison_query = config.get('queries', 'model_comparison_query')
 
+# 공통 이모지 맵 로드
+EMOJI_MAP = dict(config['emojis'])
 
-def get_data_kobert():
-    conn = pymysql.connect(**db_config)
+def get_db_connection():
+    return pymysql.connect(**db_config)
+
+def get_available_models():
+    """Config에서 정의된 모델 슬러그 목록 반환"""
+    if config.has_section('models'):
+        return list(config['models'].keys())
+    return []
+
+def get_data_by_model(model_slug):
+    """단일 모델 결과 조회"""
+    if not config.has_option('models', model_slug):
+        return None
+        
+    db_model_name = config.get('models', model_slug)
+    
+    conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(kobert_query)
+    cursor.execute(model_data_query, (db_model_name,))
     rows = cursor.fetchall()
     conn.close()
     return rows
 
-def get_data_koelectra():
-    conn = pymysql.connect(**db_config)
+def get_combined_model_data(model_slug_a, model_slug_b):
+    """두 모델 비교 데이터 조회"""
+    conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(koelectra_query)
-    rows = cursor.fetchall()
-    conn.close()
-    return rows
-
-
-def get_combined_model_data():
-    conn = pymysql.connect(**db_config)
-    cursor = conn.cursor()
-    cursor.execute(model_comparison_query)
+    
+    # URL 슬러그 -> DB 실제 모델명 변환
+    real_name_a = config.get('models', model_slug_a, fallback=model_slug_a)
+    real_name_b = config.get('models', model_slug_b, fallback=model_slug_b)
+    
+    # 쿼리 실행 (파라미터 2개 전달)
+    cursor.execute(model_comparison_query, (real_name_a, real_name_b))
     rows = cursor.fetchall()
     conn.close()
 
     combined_data = OrderedDict()
-    model_set = set()
-    keyword_set = set()
-    sentiment_map = {}  # 모델별 감정 집합
-
+    
+    # 쿼리 컬럼 순서 (config.ini 쿼리에 맞춰 조정 필수)
+    # 예: 0:id, 1:kw_id, 2:title, 3:cont, 4:url, 5:pub, 6:r1_sent, 7:r1_score, 8:r2_sent, 9:r2_score
     for row in rows:
         article_id = row[0]
-        base_info = row[0:6] + row[9:11]  # id~url + published_at, collected_at
-        model_name = row[6]
-        sentiment = row[7]
-        score = row[8]
-
-        model_set.add(model_name)
-        keyword_set.add(row[2] or '')
-
-        # 모델별 sentiment 분리
-        if model_name not in sentiment_map:
-            sentiment_map[model_name] = set()
-        if sentiment:
-            sentiment_map[model_name].add(sentiment.lower())
-
+        
         if article_id not in combined_data:
             combined_data[article_id] = {
-                'meta': base_info,
+                'meta': {
+                    'id': row[0], 
+                    'keyword_id': row[1], 
+                    'title': row[2],
+                    'content': row[3], # preview
+                    'url': row[4],     # url
+                    'published_at': row[5] # pub date
+                },
                 'models': {}
             }
+        
+        # Model A 결과 (r1)
+        if row[6]: 
+            combined_data[article_id]['models'][real_name_a] = {
+                'sentiment': row[6], 
+                'score': row[7]
+            }
+            
+        # Model B 결과 (r2)
+        if row[8]: 
+            combined_data[article_id]['models'][real_name_b] = {
+                'sentiment': row[8], 
+                'score': row[9]
+            }
 
-        combined_data[article_id]['models'][model_name] = {
-            'sentiment': sentiment,
-            'score': score
-        }
+    # 현재 비교 중인 실제 모델명 리스트
+    current_models = [real_name_a, real_name_b]
+    
+    # 이모지 맵 생성
+    full_emoji_map = {m: EMOJI_MAP for m in current_models}
 
-    model_list = sorted(model_set)
-    keyword_list = sorted(keyword_set)
-    # 모델별 감정 목록 sorted
-    sentiment_map = {k: sorted(v) for k, v in sentiment_map.items()}
+    return combined_data, current_models, full_emoji_map
 
-    return combined_data, model_list, keyword_list, sentiment_map
 
+# --- 라우터 ---
 
 @app.route('/')
 def main():
     return render_template('main.html')
 
-@app.route('/kobert')
-def kobert():
-    data = get_data_kobert()
-    # 감정 필터 옵션 리스트 (소문자 일관성 유지)
-    sentiment_list = ['angry', 'fear', 'happy', 'tender', 'sad']
-    return render_template('kobert_table.html', data=data, sentiment_list=sentiment_list, active_tab='kobert')
+@app.route('/model/<model_name>')
+def model_result(model_name):
+    data = get_data_by_model(model_name)
+    if data is None:
+        abort(404, description=f"Model '{model_name}' not found in config.")
 
-@app.route('/koelectra')
-def koelectra():
-    data = get_data_koelectra()
-    sentiment_list = ['angry', 'happy', 'anxious', 'embarrassed', 'sad', 'heartache']
-    return render_template('koelectra_table.html', data=data, sentiment_list=sentiment_list, active_tab='koelectra')
+    sentiments_str = config.get('sentiments', model_name, fallback='')
+    sentiments = [s.strip() for s in sentiments_str.split(',') if s.strip()]
+
+    return render_template(
+        'model_result.html',
+        data=data,
+        model_name=model_name,
+        sentiments=sentiments,
+        emoji_map=EMOJI_MAP,
+        active_tab=model_name
+    )
 
 @app.route('/comparison')
 def comparison():
-    combined_data, model_list, keyword_list, sentiment_map = get_combined_model_data()
-
-    emoji_map = {
-        'KoBERT': {
-            'angry': '😠',
-            'fear': '😳',
-            'happy': '😊',
-            'tender': '😐',
-            'sad': '😢'
-        },
-        'KoELECTRA': {
-            'angry': '😠',
-            'happy': '😊',
-            'anxious': '😰',
-            'embarrassed': '😳',
-            'sad': '😢',
-            'heartache': '💔'
-        }
-        # 새 모델이 생기면 여기 추가
-    }
-
+    # 1. 전체 모델 목록 (드롭다운용)
+    all_models = get_available_models()
+    
+    # 2. 파라미터 파싱 (기본값: 목록의 첫번째, 두번째 모델)
+    default_a = all_models[0] if all_models else 'kobert'
+    default_b = all_models[1] if len(all_models) > 1 else default_a
+    
+    model1 = request.args.get('model1', default_a)
+    model2 = request.args.get('model2', default_b)
+    
+    # 3. 데이터 조회
+    combined_data, current_models, emoji_map = get_combined_model_data(model1, model2)
+    
     return render_template('comparison.html',
                            combined_data=combined_data,
-                           model_list=model_list,
-                           keyword_set=keyword_list,
-                           sentiment_map=sentiment_map,
+                           model_list=current_models, # [실제이름A, 실제이름B]
+                           all_models=all_models,     # [슬러그1, 슬러그2...]
+                           selected_models={'a': model1, 'b': model2},
                            emoji_map=emoji_map,
                            active_tab='comparison')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
+

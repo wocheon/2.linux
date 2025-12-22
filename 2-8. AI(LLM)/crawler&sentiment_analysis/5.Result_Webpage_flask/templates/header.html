@@ -1,7 +1,13 @@
-<link href="static/css/bootstrap.min.css" rel="stylesheet" />
+<!-- <link href="static/css/bootstrap.min.css" rel="stylesheet" />
 <link href="static/css/sb-admin-2.min.css" rel="stylesheet" />
 <link href="static/css/dataTables.bootstrap4.min.css" rel="stylesheet" />
-<link href="static/css/jquery-ui.min.css" rel="stylesheet" />
+<link href="static/css/jquery-ui.min.css" rel="stylesheet" /> -->
+
+<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/jquery-ui.min.css') }}" rel="stylesheet" />
+
 
 <style>
   thead input, thead select {
@@ -46,10 +52,10 @@
     <a class="nav-link {% if active_tab == 'main' %}active{% endif %}" href="/">메인</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link {% if active_tab == 'kobert' %}active{% endif %}" href="/kobert">KoBERT 모델</a>
+    <a class="nav-link {% if active_tab == 'kobert' %}active{% endif %}" href="/model/kobert">KoBERT 모델</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link {% if active_tab == 'koelectra' %}active{% endif %}" href="/koelectra">KoElectra 모델</a>
+    <a class="nav-link {% if active_tab == 'koelectra' %}active{% endif %}" href="/model/koelectra">KoElectra 모델</a>
   </li>
   <li class="nav-item">
     <a class="nav-link {% if active_tab == 'comparison' %}active{% endif %}" href="/comparison">비교 페이지</a>
