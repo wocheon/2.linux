@@ -49,11 +49,11 @@ async def lifespan(app: FastAPI):
     
     try:
         # KoBERT
-        ml_resources["kobert_tokenizer"] = AutoTokenizer.from_pretrained(KOBERT_MODEL_DIR)
+        ml_resources["kobert_tokenizer"] = AutoTokenizer.from_pretrained(KOBERT_MODEL_DIR, trust_remote_code=True)
         ml_resources["kobert_model"] = BertForSequenceClassification.from_pretrained(KOBERT_MODEL_DIR).to(device)
         
         # KoELECTRA
-        ml_resources["koelectra_tokenizer"] = AutoTokenizer.from_pretrained(KOELECTRA_MODEL_DIR)
+        ml_resources["koelectra_tokenizer"] = AutoTokenizer.from_pretrained(KOELECTRA_MODEL_DIR, trust_remote_code=True)
         ml_resources["koelectra_model"] = ElectraForSequenceClassification.from_pretrained(KOELECTRA_MODEL_DIR).to(device)
         
         ml_resources["device"] = device
@@ -95,7 +95,7 @@ async def call_llm_single(text: str):
             model=LLM_MODEL_NAME,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
-            max_tokens=150
+            max_tokens=150      # 응답 불가시 조정 필요
         )
         content = response.choices[0].message.content
         
