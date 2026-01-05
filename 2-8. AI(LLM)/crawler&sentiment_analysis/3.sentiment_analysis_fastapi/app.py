@@ -1,3 +1,4 @@
+import re
 from fastapi import FastAPI
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
@@ -29,6 +30,7 @@ LLM_MODEL_NAME = config.get('llm', 'model_name')
 LLM_TIMEOUT = config.getint('llm', 'timeout', fallback=60)
 LLM_LABELS = config.get('llm', 'sentiment_labels')
 LLM_PROMPT = config.get('llm', 'prompt_template')
+LLM_MAX_TOKENS = config.get('llm', 'max_tokens')
 
 # 전역 리소스
 ml_resources: Dict = {}
@@ -93,11 +95,16 @@ async def call_llm_single(text: str):
     try:
         response = await aclient.chat.completions.create(
             model=LLM_MODEL_NAME,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                      {"role": "system", "content": "Return only a JSON object. Do not output thinking process."},
+                      {"role": "user", "content": prompt}
+            ],
             temperature=0.0,
-            max_tokens=150      # 응답 불가시 조정 필요
+            max_tokens=1024
         )
         content = response.choices[0].message.content
+        content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
+        print(f"🔴 [LLM Raw Response]: {content}")
         
         # JSON 파싱
         clean = content.replace("``````", "").strip()
@@ -127,4 +134,5 @@ async def llm_batch(req: BatchInputText):
     tasks = [call_llm_single(text) for text in req.texts]
     results = await asyncio.gather(*tasks)
     return {"model": LLM_MODEL_NAME, "count": len(results), "results": results}
+
 

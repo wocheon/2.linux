@@ -139,7 +139,7 @@ def analyze_articles():
                 es_doc_id = row[3]
                 try:
                     es_doc = es.get(index=es_conf['index_name'], id=es_doc_id)
-                    content = es_doc['_source'].get('content', '')
+                    content = es_doc['_source'].get('summary', '')
                     if content.strip():
                         article_ids.append(article_id)
                         texts.append(content[:api_conf['max_len']])

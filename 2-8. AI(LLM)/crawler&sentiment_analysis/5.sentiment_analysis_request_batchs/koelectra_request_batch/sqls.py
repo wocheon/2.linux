@@ -1,8 +1,7 @@
 # 모든 기사 SELECT (필요시 조건 추가)
 SELECT_ARTICLE_LIST = """
 SELECT id, keyword_id, title, content, url, published_at, collected_at 
-FROM crawler_article_list
-where id between 31 and 40;
+FROM crawler_article_list;
 """
 #WHERE collected_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR);
 
@@ -20,7 +19,7 @@ INSERT_SENTIMENT_RESULT = """
 
 
 #INSERT_SENTIMENT_RESULT = """
-#INSERT INTO kobert_sentiment_analysis_result 
+#INSERT INTO koelectra_sentiment_analysis_result 
 #(article_id, sentiment, score, analyzed_at)
 #VALUES (%s, %s, %s, %s)
 #"""

@@ -69,7 +69,7 @@ def analyze_articles():
 
             try:
                 es_doc = es.get(index=es_conf['index_name'], id=es_doc_id)
-                content = es_doc['_source'].get('content', '')
+                content = es_doc['_source'].get('summary', '')
 
                 if not content.strip():
                     continue

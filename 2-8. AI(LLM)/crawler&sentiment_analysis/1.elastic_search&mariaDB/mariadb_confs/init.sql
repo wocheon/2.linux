@@ -14,10 +14,10 @@ FLUSH PRIVILEGES;
 CREATE TABLE IF NOT EXISTS crawler_keyword_list (
     id INT AUTO_INCREMENT PRIMARY KEY,
     keyword VARCHAR(100) UNIQUE NOT NULL,
-    `desc` VARCHAR(255)
+    category VARCHAR(100)
 )  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ;
 
-INSERT INTO crawler_keyword_list (keyword, `desc`) VALUES
+INSERT INTO crawler_keyword_list (keyword, category) VALUES
 ('LLM', 'AI'),
 ('MaaS', 'AI'),
 ('쿠팡', '시사'),

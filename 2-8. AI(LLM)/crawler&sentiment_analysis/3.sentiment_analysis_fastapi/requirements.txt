@@ -4,3 +4,4 @@ transformers
 torch
 protobuf
 openai
+sentencepiece
