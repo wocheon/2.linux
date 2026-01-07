@@ -78,3 +78,8 @@ $ dpkg-reconfigure dash
 root@dev:~$ ls -l /bin/sh
 lrwxrwxrwx 1 root root 4  9월  2 11:24 /bin/sh -> bash
 ```
+
+## 참고 - 심볼릭링크 변경을통해 bash로 변경
+```bash
+sudo ln -sf /usr/bin/bash /usr/bin/sh
+```
