@@ -13,6 +13,8 @@ from transformers import (
 )
 from sklearn.metrics import accuracy_score, f1_score
 
+os.environ["WANDB_DISABLED"] = "true"
+
 # ==========================================
 # 0. 유틸리티 & 콜백 클래스
 # ==========================================
@@ -33,10 +35,10 @@ class DescriptionCallback(TrainerCallback):
             epoch_info = f"[Epoch: {logs.get('epoch', 0):.2f}]"
             if 'loss' in logs:
                 loss_val = logs['loss']
-                if loss_val > 0.8: comment = "😰 아직 헤매는 중..."
-                elif loss_val > 0.5: comment = "🤔 감을 잡는 중..."
-                elif loss_val > 0.3: comment = "🙂 학습이 잘 되고 있어요!"
-                else: comment = "🚀 완벽해요!"
+                if loss_val > 0.8: comment = "😰 아직 헤매는 중 ..."
+                elif loss_val > 0.5: comment = "🤔 감을 잡는 중 ..."
+                elif loss_val > 0.3: comment = "🙂 학습이 잘 되고 있어요 !"
+                else: comment = "🚀 완벽해요 !"
                 print(f"{epoch_info} Loss: {loss_val:.4f} -> {comment}")
             if 'learning_rate' in logs:
                 print(f"   └─ LR: {logs['learning_rate']:.2e}")
@@ -46,7 +48,7 @@ class DescriptionCallback(TrainerCallback):
 # ==========================================
 config = configparser.ConfigParser()
 if not os.path.exists('config.ini'):
-    raise FileNotFoundError("❌ 'config.ini' 파일이 없습니다. 설정을 확인해주세요.")
+    raise FileNotFoundError("❌ 'config.ini' 파일이 없습니다. 설정을 확인해주세요 .")
 config.read('config.ini')
 
 # [Path]
@@ -88,7 +90,7 @@ else:
     print(f"▶ 검증 파일 없음 (학습 데이터에서 {SPLIT_RATIO*100}% 자동 분할)")
     raw_dataset = load_dataset(data_format, data_files={"train": TRAIN_FILE})
     if len(raw_dataset["train"]) < 10:
-        raise ValueError("❌ 데이터가 너무 적습니다. 최소 10개 이상 필요합니다.")
+        raise ValueError("❌ 데이터가 너무 적습니다. 최소 10개 이상 필요합니다 .")
     split_datasets = raw_dataset["train"].train_test_split(test_size=SPLIT_RATIO, seed=SEED)
     train_dataset = split_datasets["train"]
     eval_dataset = split_datasets["test"]
@@ -105,12 +107,12 @@ if USE_SUBSET:
         train_dataset = train_dataset.select(range(SUBSET_SIZE))
     eval_dataset = eval_dataset.select(range(min(len(eval_dataset), int(SUBSET_SIZE * 0.2))))
 
-print(f"✅ 데이터 준비 완료: 학습({len(train_dataset)}) / 검증({len(eval_dataset)})")
+print(f"✅ 데이터 준비 완료: 학습({len(train_dataset)}) / 검증 ({len(eval_dataset)})")
 
 # ==========================================
 # 3. 토크나이저 로드 및 패치 (중요!)
 # ==========================================
-print("⏳ 토크나이저 로드 중...")
+print("⏳ 토크나이저 로드 중 ...")
 try:
     # trust_remote_code=True 추가로 보안 경고 자동 승인
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
@@ -135,7 +137,7 @@ def patched_save_vocabulary(save_directory, filename_prefix=None):
 
 # 메서드 덮어쓰기
 tokenizer.save_vocabulary = patched_save_vocabulary
-print("🔧 토크나이저 호환성 패치 적용 완료")
+print("🔧 토크나이저 호환성 패치 적용 완료 ")
 
 # 전처리 함수
 def preprocess_function(examples):
@@ -188,7 +190,7 @@ training_args = TrainingArguments(
     save_total_limit=2,
     seed=SEED,
     logging_dir=f"{OUTPUT_DIR}/logs",
-    logging_steps=10,
+    logging_steps=50,
     disable_tqdm=False,
 )
 
@@ -205,7 +207,7 @@ trainer = Trainer(
 # ==========================================
 # 5. 학습 실행 및 안전 저장
 # ==========================================
-print("🚀 학습 시작...")
+print("🚀 학습 시작 ...")
 
 try:
     trainer.train()
@@ -215,16 +217,16 @@ except TypeError as e:
         print("⚠ Trainer 자동 저장 중 호환성 이슈 발생 (무시하고 수동 저장 진행)")
     else:
         # 진짜 심각한 에러는 다시 발생시킴
-        print(f"❌ 학습 중 치명적 에러 발생: {e}")
+        print(f"❌ 학습 중 치명적 에러 발생 : {e}")
         # 그래도 모델은 살려본다
         model.save_pretrained(f"{OUTPUT_DIR}_emergency")
         raise e
 except Exception as e:
-    print(f"❌ 예상치 못한 에러: {e}")
+    print(f"❌ 예상치 못한 에러 : {e}")
     model.save_pretrained(f"{OUTPUT_DIR}_emergency")
     raise e
 
-print(f"💾 최종 모델 저장 중... ({OUTPUT_DIR})")
+print(f"💾 최종 모델 저장 중 ... ({OUTPUT_DIR})")
 # 모델 저장
 model.save_pretrained(OUTPUT_DIR)
 
@@ -234,5 +236,4 @@ try:
 except Exception as e:
     print(f"⚠ 토크나이저 저장 실패 (모델은 저장됨): {e}")
 
-print("🎉 모든 작업이 완료되었습니다! (app.py에서 사용 가능)")
-
+print("🎉 모든 작업이 완료되었습니다! (app.py에서 사용 가능 )")

@@ -1,6 +1,6 @@
 from openai import OpenAI
 client = OpenAI(
-    base_url="http://35.216.26.195:11434/v1",  # Ollama 기본 포트
+    base_url="https://unconstruable-nonfactually-cedric.ngrok-free.dev/v1",  # Ollama 기본 포트
     api_key="ollama"  # Ollama는 API Key로 'ollama'를 관례적으로 사용
 )
 response = client.chat.completions.create(
