@@ -22,6 +22,7 @@ graph TB
     Models[KoBERT/KoELECTRA/LLM]
     Web[Flask Web Server]
     User[User]
+    data[데이터 조회]
 
 
 subgraph "crawler"
@@ -45,12 +46,15 @@ subgraph "AI"
     end
 end
 
-
 subgraph "web"
     User
     Web
 end
 
+subgraph "db"
+    MySQL
+    ES
+end
 
 
 User~~~async
@@ -78,8 +82,7 @@ Models -->|9.분석 결과 저장| MySQL
 
 %% 서비스 단계
 User -->|결과 조회| Web
-Web -->|데이터 조회| MySQL
-Web -->|데이터 조회| ES
+Web -.-> data -.-> MySQL & ES
 ```
 
 - 특정 키워드 및 카테고리에 대한 기사를 수집하여 DB 및 ES에 저장
@@ -97,6 +100,14 @@ Web -->|데이터 조회| ES
     - Redis Queue와 Celery Workers를 활용한 비동기 처리 방식으로 변경
     - 크롤러가 수집 후 바로 요약 및 감성분석 작업을 등록하면 워커가 이를 처리
 
-
+## 사용 기술 스택
+- 크롤링: Selenium, BeautifulSoup4
+- 데이터 저장: MariaDB, ElasticSearch
+- 메시지 큐: Redis
+- 비동기 처리: Celery
+- LLM: OpenAI API, vLLM
+- 감성 분석 모델: KoBERT, KoELECTRA, Qwen3
+- 웹 프레임워크: FastAPI, Flask
+- 배포: Docker
 
 
