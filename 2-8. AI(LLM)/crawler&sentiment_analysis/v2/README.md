@@ -17,8 +17,9 @@ graph TB
     MySQL[(MariaDB)]
     Redis[Redis Queue]
     Worker[Celery Workers]
-    LLM[OpenAI / LLM]
-    Models[KoBERT / KoELECTRA]
+    FASTAPI[FastAPI]
+    LLM[LLM Endpoint]
+    Models[KoBERT/KoELECTRA/LLM]
     Web[Flask Web Server]
     User[User]
 
@@ -28,26 +29,32 @@ subgraph "crawler"
     Crawler
 end
 
-subgraph "web"
-    Web
-end
-
 subgraph "async"
     Redis
     Worker
 end
 
-subgraph "AI Models"
-    LLM
-    Models
+subgraph "AI"
+    subgraph "Sentinment"
+        FASTAPI
+        Models
+    end
+
+    subgraph "Summary"
+        LLM    
+    end
 end
+
+
+subgraph "web"
+    User
+    Web
+end
+
+
 
 User~~~async
 web~~~async
-
-%% 서비스 단계
-Web -->|데이터 조회| MySQL
-Web -->|데이터 조회| ES
 
 %% 수집 단계    
 RSS -->|기사 수집| Crawler
@@ -55,15 +62,24 @@ Crawler -->|1. 메타데이터 저장| MySQL
 Crawler -->|2. 본문 저장| ES
 Crawler -->|3. 작업 등록| Redis
 
-Worker -->|요약 요청| LLM
-Worker -->|감성 분석| Models
-LLM -->|요약문 저장| ES
-Models -->|분석 결과 저장| MySQL
-
 %% 처리 단계
-Redis -->|작업 할당| Worker
-Worker -->|본문 조회| ES
-User -->|결과 조회| web
+Worker -->|본문/요약문 조회| ES
+Redis -->|4. 작업 할당| Worker
+
+
+%% AI 단계
+Worker -->|5.원문 요약 요청| LLM
+LLM -->|6.요약문 저장| ES
+Worker -->|7.요약문 전달| FASTAPI
+FASTAPI -->|8.감성 분석| Models
+Models -->|9.분석 결과 저장| MySQL
+
+
+
+%% 서비스 단계
+User -->|결과 조회| Web
+Web -->|데이터 조회| MySQL
+Web -->|데이터 조회| ES
 ```
 
 - 특정 키워드 및 카테고리에 대한 기사를 수집하여 DB 및 ES에 저장
