@@ -3,7 +3,8 @@ import os
 import torch
 import numpy as np
 import shutil
-from datasets import load_dataset
+import logging
+from datasets import load_dataset, disable_progress_bar
 from transformers.trainer_utils import get_last_checkpoint
 from transformers import (
     AutoTokenizer,
@@ -13,18 +14,22 @@ from transformers import (
     Trainer,
     TrainingArguments,
     DataCollatorWithPadding,
-    TrainerCallback
+    TrainerCallback,
+    logging as hf_logging
 )
 from sklearn.metrics import accuracy_score, f1_score
 import gc
 
-# WANDB 비활성화 (로그인 요구 방지)
+# ==========================================
+# [설정] 환경 변수 및 로깅 제어
+# ==========================================
 os.environ["WANDB_DISABLED"] = "true"
-# 토크나이저 병렬 처리 경고 끄기
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+hf_logging.set_verbosity_warning()
+disable_progress_bar()
 
 # ==========================================
-# 0. 유틸리티 & 콜백 클래스
+# 0. 유틸리티 & 커스텀 클래스
 # ==========================================
 def get_data_format(file_path):
     """파일 확장자를 기반으로 load_dataset의 포맷 파라미터를 결정"""
@@ -36,20 +41,62 @@ def get_data_format(file_path):
         print(f"⚠ 알 수 없는 확장자(.{ext})입니다. 기본값 'csv'로 시도합니다.")
         return 'csv'
 
+def get_model_classes(model_name):
+    """모델 이름에 따라 적절한 Tokenizer/Model 클래스 반환"""
+    model_name_lower = model_name.lower()
+    if "koelectra" in model_name_lower:
+        print(f"⚡ KoELECTRA 감지: Electra 전용 클래스를 사용합니다.")
+        return ElectraTokenizer, ElectraForSequenceClassification
+    else:
+        print(f"🤖 일반 모델 감지: Auto 클래스를 사용합니다.")
+        return AutoTokenizer, AutoModelForSequenceClassification
+
 class DescriptionCallback(TrainerCallback):
-    """학습 로그를 더 친절하게 출력하는 커스텀 콜백"""
+    """
+    학습 로그를 이모지와 함께 친절하게 출력하는 커스텀 콜백
+    (학습 중 Loss 변화와 검증 결과를 모두 보여줍니다)
+    """
     def on_log(self, args, state, control, logs=None, **kwargs):
         if state.is_local_process_zero and logs:
-            epoch_info = f"[Epoch: {logs.get('epoch', 0):.2f}]"
-            if 'loss' in logs:
+            epoch = logs.get('epoch', 0)
+            
+            # 1. 학습 중 Loss 로그 (Training Loss)
+            if 'loss' in logs and 'eval_loss' not in logs:
                 loss_val = logs['loss']
                 if loss_val > 0.8: comment = "😰 아직 헤매는 중..."
                 elif loss_val > 0.5: comment = "🤔 감을 잡는 중..."
                 elif loss_val > 0.3: comment = "🙂 학습이 잘 되고 있어요!"
                 else: comment = "🚀 완벽해요!"
-                print(f"{epoch_info} Loss: {loss_val:.4f} -> {comment}")
-            if 'learning_rate' in logs:
-                print(f"   └─ LR: {logs['learning_rate']:.2e}")
+                
+                print(f"[Epoch {epoch:.2f}] Loss: {loss_val:.4f} -> {comment}")
+                if 'learning_rate' in logs:
+                    print(f"   └─ LR: {logs['learning_rate']:.2e}")
+
+            # 2. 검증 결과 로그 (Validation Metrics)
+            if 'eval_accuracy' in logs:
+                acc = logs['eval_accuracy']
+                f1 = logs.get('eval_f1', 0)
+                loss = logs.get('eval_loss', 0)
+                
+                # 검증 점수에 따른 코멘트
+                if acc < 0.6: score_comment = "🚧 아직 부족해요"
+                elif acc < 0.8: score_comment = "✨ 쓸만해지고 있어요"
+                else: score_comment = "🏆 훌륭합니다!"
+                
+                print(f"\n✨ [Epoch {epoch:.2f} 검증 완료] {score_comment}")
+                print(f"   └─ Acc: {acc:.4f} | F1: {f1:.4f} | Loss: {loss:.4f}\n")
+
+class SilentEvalTrainer(Trainer):
+    """검증 시 TQDM 바를 끄는 커스텀 트레이너"""
+    def prediction_loop(self, dataloader, description, prediction_loss_only=None, ignore_keys=None, metric_key_prefix="eval"):
+        original_disable_tqdm = self.args.disable_tqdm
+        self.args.disable_tqdm = True
+        try:
+            return super().prediction_loop(dataloader, description, prediction_loss_only, ignore_keys, metric_key_prefix)
+        finally:
+            self.args.disable_tqdm = original_disable_tqdm
+        
+        return output
 
 # ==========================================
 # 1. Config 로드
@@ -73,7 +120,7 @@ if not os.path.exists(config_path):
         'epochs': '3',
         'seed': '42',
         'split_ratio': '0.2',
-        'min_confidence': '0.8' # [New] 최소 신뢰도 설정
+        'min_confidence': '0.8'
     }
 else:
     config.read(config_path)
@@ -88,7 +135,6 @@ CHECKPOINT_DIR = config['Path']['checkpoint_dir']
 
 # [Hyperparameters] 섹션 로드
 params = config['Hyperparameters']
-
 NUM_LABELS = int(params.get('num_labels', 3))
 MAX_LEN = int(params.get('max_seq_length', 128))
 TARGET_BATCH_SIZE = int(params.get('batch_size', 64))
@@ -96,7 +142,7 @@ LR = float(params.get('learning_rate', 2e-5))
 EPOCHS = int(params.get('epochs', 3))
 SEED = int(params.get('seed', 42))
 SPLIT_RATIO = float(params.get('split_ratio', 0.2))
-MIN_CONFIDENCE = float(params.get('min_confidence', 0.8)) # [New] 필터링 기준
+MIN_CONFIDENCE = float(params.get('min_confidence', 0.8))
 
 # [Subset] 옵션
 USE_SUBSET = config.getboolean('Hyperparameters', 'use_subset', fallback=False)
@@ -105,85 +151,56 @@ SUBSET_SIZE = config.getint('Hyperparameters', 'subset_size', fallback=100)
 print(f"▶ 모델: {MODEL_NAME}")
 print(f"▶ 학습 파일: {TRAIN_FILE}")
 
-# =========================================================
-# [New] 모델 타입에 따른 클래스 자동 선택 로직
-# =========================================================
-def get_model_classes(model_name):
-    model_name_lower = model_name.lower()
-    
-    # 1. KoELECTRA인 경우
-    if "koelectra" in model_name_lower:
-        print(f"⚡ KoELECTRA 감지: Electra 전용 클래스를 사용합니다. ({model_name}), Class : ElectraTokenizer, ElectraForSequenceClassification")
-        return ElectraTokenizer, ElectraForSequenceClassification
-        
-    # 2. 그 외 (DeBERTa, RoBERTa, KoBERT 등) -> Auto 클래스 사용
-    else:
-        print(f"🤖 일반 모델 감지: Auto 클래스를 사용합니다. ({model_name}), Class : AutoTokenizer, AutoModelForSequenceClassification")
-        return AutoTokenizer, AutoModelForSequenceClassification
-
 # 사용할 클래스 결정
 TokenizerClass, ModelClass = get_model_classes(MODEL_NAME)
 
-
 # ==========================================
-# 2. 데이터셋 로드 및 전처리 (수정됨)
+# 2. 데이터셋 로드 및 전처리
 # ==========================================
 data_format = get_data_format(TRAIN_FILE)
-print(f"▶ 감지된 포맷: {data_format}")
-
-# 원본 데이터 로드
 raw_dataset = load_dataset(data_format, data_files={"train": TRAIN_FILE})['train']
 
-# -------------------------------------------------------------
-# [Step A] 데이터 필터링 및 포맷팅
-# -------------------------------------------------------------
+# [Step A] 데이터 필터링
 def filter_and_format(example):
-    # 1. Confidence 체크 (컬럼이 있는 경우만)
+    # 1. Confidence 체크
     if 'confidence' in example and example['confidence'] is not None:
         try:
             if float(example['confidence']) < MIN_CONFIDENCE:
                 return False
         except:
-            pass # 파싱 에러 시 안전하게 유지 혹은 제거(여기선 유지)
-            
-    # 2. Label 유효성 체크 (0, 1, 2만 허용)
+            pass
+    # 2. Label 유효성 체크
     if example.get('label_sentiment') not in [0, 1, 2]:
         return False
-        
     return True
 
 print(f"📉 품질 필터링 전: {len(raw_dataset)}건")
 filtered_dataset = raw_dataset.filter(filter_and_format)
 print(f"📈 품질 필터링 후: {len(filtered_dataset)}건 (기준: conf >= {MIN_CONFIDENCE})")
 
-# -------------------------------------------------------------
-# [Step B] 입력 텍스트 조합 (테마 제외)
-# -------------------------------------------------------------
+# [Step B] 입력 텍스트 조합 (DeBERTa 자연어 포맷 적용)
 def combine_text(example):
     tgt = example.get('target', '시장')
-    # 테마(themes)는 추론 시 의존성 문제로 제외합니다.
     title = example.get('title', '')
     
-    # [Target] Title 형식으로 결합
-    combined_text = f"[{tgt}] {title}"
+    # [핵심 변경] "[Target] Title" -> "Target 관련 뉴스: Title"
+    combined_text = f"{tgt} 관련 뉴스: {title}"
     
     return {
         "text": combined_text, 
         "label": int(example['label_sentiment']) 
     }
 
-# 데이터 변환 적용 (기존 컬럼 제거)
 processed_dataset = filtered_dataset.map(combine_text, remove_columns=filtered_dataset.column_names)
 
 # 학습/검증 분할
 if VALID_FILE and os.path.exists(VALID_FILE):
-    # 검증 파일도 동일하게 전처리 필요
     raw_eval = load_dataset(data_format, data_files={"validation": VALID_FILE})['validation']
     eval_dataset = raw_eval.filter(filter_and_format).map(combine_text, remove_columns=raw_eval.column_names)
     train_dataset = processed_dataset
 else:
     if len(processed_dataset) < 10:
-        raise ValueError("❌ 데이터가 너무 적습니다. 최소 10개 이상 필요합니다.")
+        raise ValueError("❌ 데이터가 너무 적습니다.")
     split_datasets = processed_dataset.train_test_split(test_size=SPLIT_RATIO, seed=SEED)
     train_dataset = split_datasets["train"]
     eval_dataset = split_datasets["test"]
@@ -194,17 +211,20 @@ if USE_SUBSET:
         train_dataset = train_dataset.select(range(SUBSET_SIZE))
     eval_dataset = eval_dataset.select(range(min(len(eval_dataset), int(SUBSET_SIZE * 0.2))))
 
-print(f"✅ 최종 준비 완료: 학습({len(train_dataset)}) / 검증({len(eval_dataset)})")
-print(f"👀 입력 예시: {train_dataset[0]['text']} -> 라벨: {train_dataset[0]['label']}")
+print(f"✅ 최종 데이터: 학습({len(train_dataset)}) / 검증({len(eval_dataset)})")
+print(f"👀 입력 변환 예시: '{train_dataset[0]['text']}' -> 라벨: {train_dataset[0]['label']}")
 
 # ==========================================
-# 3. 토크나이저 로드 및 패치
+# 3. 토크나이저 로드
 # ==========================================
 print("⏳ 토크나이저 로드 중...")
-# [수정됨] 결정된 클래스로 로드
-tokenizer = TokenizerClass.from_pretrained(MODEL_NAME, trust_remote_code=True)
 
-# [Monkey Patch] save_vocabulary 호환성 문제 해결
+tokenizer = TokenizerClass.from_pretrained(
+    MODEL_NAME, 
+    trust_remote_code=True
+)
+
+# [Monkey Patch] save_vocabulary 호환성 보장
 if not hasattr(tokenizer, "_original_save_vocabulary"):
     if hasattr(tokenizer, "save_vocabulary"):
         tokenizer._original_save_vocabulary = tokenizer.save_vocabulary
@@ -214,10 +234,8 @@ def patched_save_vocabulary(save_directory, filename_prefix=None):
         return tokenizer._original_save_vocabulary(save_directory)
     else:
         return ()
-
 tokenizer.save_vocabulary = patched_save_vocabulary
 
-# 토크나이징 함수
 def preprocess_function(examples):
     return tokenizer(
         examples["text"], 
@@ -234,11 +252,9 @@ tokenized_eval = eval_dataset.map(preprocess_function, batched=True)
 # ==========================================
 gc.collect()
 torch.cuda.empty_cache()
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"▶ 학습 장치: {device}")
 
-# [수정됨] 결정된 클래스로 로드
 model = ModelClass.from_pretrained(
     MODEL_NAME, 
     num_labels=NUM_LABELS,
@@ -254,7 +270,7 @@ def compute_metrics(eval_pred):
     f1 = f1_score(labels, predictions, average="macro")
     return {"accuracy": acc, "f1": f1}
 
-# OOM 방지 배치 사이즈 설정
+# 배치 사이즈 계산
 SAFE_GPU_BATCH_SIZE = 4 
 if TARGET_BATCH_SIZE < SAFE_GPU_BATCH_SIZE:
     calculated_accum_steps = 1
@@ -280,11 +296,17 @@ training_args = TrainingArguments(
     save_total_limit=2,
     seed=SEED,
     logging_dir=f"{OUTPUT_DIR}/logs",
-    logging_steps=500,
-    optim="adamw_torch"
+    logging_steps=100,
+    optim="adamw_torch",
+    
+    # [로그 설정]
+    disable_tqdm=False,  # 학습 진행바는 유지 (검증은 SilentEvalTrainer가 제어)
+    log_level="error",
+    report_to=["none"]
 )
 
-trainer = Trainer(
+# [핵심] SilentEvalTrainer 사용
+trainer = SilentEvalTrainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_train,

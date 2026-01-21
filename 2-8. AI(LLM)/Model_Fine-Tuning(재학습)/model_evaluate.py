@@ -17,9 +17,9 @@ from transformers import (
 os.environ["WANDB_DISABLED"] = "true"
 
 # 학습된 모델 경로
-#MODEL_PATH = "./models/fine_tunned_debert"
+MODEL_PATH = "./models/fine_tunned_debert"
 #MODEL_PATH = "./models/fine_tunned_kobert"
-MODEL_PATH = "./models/fine_tunned_koelectra"
+#MODEL_PATH = "./models/fine_tunned_koelectra"
 
 # 검증용 데이터셋 경로 (단일 파일)
 EVAL_DATA_PATH = "./dataset_dir/evaluate_dataset.csv"
@@ -75,7 +75,8 @@ def format_input(example):
     if title is None: title = ''
     
     # 학습 코드의 combine_text 함수와 동일한 로직 적용
-    combined_text = f"[{tgt}] {title}"
+    # [핵심 변경] "[Target] Title" -> "Target 관련 뉴스: Title"
+    combined_text = f"{tgt} 관련 뉴스: {title}"
     
     # 컬럼 매핑 (label_sentiment -> label)
     try:
