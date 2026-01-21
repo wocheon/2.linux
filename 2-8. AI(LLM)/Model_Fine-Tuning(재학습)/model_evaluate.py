@@ -12,10 +12,9 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trai
 os.environ["WANDB_DISABLED"] = "true"
 
 # 모델 경로
-MODEL_PATH = "./models/fine_tunned_koelectra"
+MODEL_PATH = "./models/fine_tunned_debert"
 
-# 데이터 파일들이 있는 폴더 경로 (마지막에 슬래시 없어도 됨)
-DATA_DIR = "./dataset_dir"
+csv_files =  "./dataset_dir/balanced_sentiment_eval_500_utf8sig.csv"
 
 # CSV 내 컬럼 이름 (실제 파일과 일치해야 함!)
 TEXT_COLUMN = "text"
@@ -32,17 +31,7 @@ model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
 # 3. 데이터 로드 (여러 CSV 합치기)
 # ==========================================================
 # 폴더 내 모든 .csv 파일 찾기
-csv_files = glob.glob(os.path.join(DATA_DIR, "*.csv"))
 
-if not csv_files:
-    raise FileNotFoundError(f"❌ '{DATA_DIR}' 경로에 .csv 파일이 하나도 없습니다!")
-
-print(f"📂 발견된 데이터 파일 ({len(csv_files)}개):")
-for f in csv_files:
-    print(f" - {f}")
-
-# 여러 파일을 한 번에 로드 (자동으로 합쳐짐)
-# split="train"을 지정해야 DatasetDict가 아닌 Dataset 객체가 나옴
 combined_dataset = load_dataset("csv", data_files=csv_files, split="train")
 
 print(f"✅ 총 데이터 개수: {len(combined_dataset)}")
