@@ -1,3 +1,5 @@
+
+
 # LLM 모델 포맷
 
 
@@ -17,7 +19,7 @@
 
 ### **🚀 AI 모델 서빙 & 학습 시나리오별 가이드 (The Definitive Guide)**
 
-#### **Situation A: "회사 서버에 올려서 고성능 서비스 할 거야" (Production Serving)**
+#### **Situation A: "회사 서버에 올려서 고성능 서비스 제공" (Production Serving)**
 > **핵심 목표**: 대규모 동시 접속 처리(Concurrency), 짧은 응답 지연(Latency), GPU 효율 극대화
 
 *   **추천 모델 포맷**: **AWQ** (권장) 또는 **GPTQ**
@@ -27,7 +29,7 @@
 *   **추천 OS**: **Linux (Ubuntu 22.04 LTS)**
     *   Windows는 프로덕션 서버로 절대 비추천 (GPU 드라이버 오버헤드 및 스케줄링 비효율)
 *   **실행 방식**: **Docker Container**
-    *   *Why?* vLLM과 CUDA 버전의 의존성이 매우 민감하므로, 호스트를 더럽히지 않고 공식 이미지를 쓰는 것이 정신 건강에 이롭습니다.
+    *   *Why?* vLLM과 CUDA 버전의 의존성이 매우 민감하므로, 호스트를 더럽히지 않고 공식 이미지를 쓰는 것이 좋음.
 *   **권장 하드웨어**: NVIDIA Data Center GPU (A100, H100, L4) 또는 High-end Consumer GPU (RTX 4090)
 
 #### **Situation B: "내 맥북이나 집 PC에서 혼자 갖고 놀 거야" (Local Playground)**
@@ -39,23 +41,24 @@
     *   **개발자라면**: **Ollama** (터미널/API 접근 용이)
     *   **비개발자라면**: **LM Studio** (채팅 UI 제공)
 *   **추천 OS**: **Mac (macOS)** 또는 **Windows 11**
-    *   Mac은 Apple Silicon(M1/M2/M3)의 통합 메모리 덕분에 AI 구동에 최적입니다.
+    *   Mac은 Apple Silicon(M1/M2/M3)의 통합 메모리 덕분에 AI 구동에 최적.
 *   **실행 방식**: **Native App (설치형 프로그램)**
-    *   *Why?* 개인 PC에서는 Docker의 오버헤드나 포트 포워딩 설정조차 귀찮습니다. 그냥 `.exe`나 `.dmg`로 설치해서 클릭 한 번으로 켜는 게 최고입니다.
+    *   *Why?* 개인 PC에서는 Docker의 오버헤드나 포트 포워딩 설정또한 복잡하므로, 그냥 `.exe`나 `.dmg`로 설치해서 클릭 한 번으로 실행하는게 나음.
 
 #### **Situation C: "모델 연구/파인튜닝(Fine-tuning)을 할 거야" (Research & Training)**
 > **핵심 목표**: 모델 가중치 수정 가능성, 학습 라이브러리 호환성, 실험 재현성
 
 *   **추천 모델 포맷**: **Safetensors** (원본 FP16/BF16)
     *   *검색 키워드*: `Llama-3-8B-Instruct` (뒤에 아무것도 안 붙은 것)
-    *   *주의*: QLoRA를 쓰더라도 원본을 받아서 로드 시점에 4bit로 변환(On-the-fly quantization)하는 것이 정석입니다.
+    *   *주의*: QLoRA를 쓰더라도 원본을 받아서 로드 시점에 4bit로 변환(On-the-fly quantization)하는 것이 정석.
         - 양자화 모델은 미세한 변화를 기록할 공간이 없으므로 기울기 소실 혹은 폭발로 인해 모델이 멍청해짐
 *   **실행 SW**: **PyTorch** + **Hugging Face Transformers** (+ PEFT/BitsAndBytes)
     *   *프레임워크*: **Unsloth** (학습 속도 2배 빠르고 메모리 절약됨, 강력 추천), Axolotl
 *   **추천 OS**: **Linux (Ubuntu)** 또는 **Windows (WSL2)**
-    *   학습용 라이브러리(DeepSpeed, BitsAndBytes)는 윈도우 네이티브에서 설치가 매우 고통스럽습니다. 윈도우라면 무조건 **WSL2**를 쓰세요.
+    *   학습용 라이브러리(DeepSpeed, BitsAndBytes)는 윈도우 네이티브에서 설치가 매우 복잡. 
+        - 윈도우라면 가급적 **WSL2** 사용.
 *   **실행 방식**: **Python Virtual Environment (Conda/Venv)**
-    *   *Why?* 학습은 실험마다 라이브러리 버전(PyTorch Nightly 등)을 자주 바꿔야 합니다. Docker는 이미지를 계속 다시 빌드해야 해서 번거로울 수 있습니다.
+    *   *Why?* 학습은 실험마다 라이브러리 버전(PyTorch Nightly 등)을 자주 변경 필요. Docker는 이미지를 계속 다시 빌드해야 해서 관리 복잡도 증가.
 
 ***
 
@@ -66,3 +69,4 @@
 | **서비스 배포** | **AWQ** | **vLLM** | **Linux** | **Docker** (필수) |
 | **로컬/개인용** | **GGUF** | **Ollama** / LM Studio | **Mac / Win** | **Native App** |
 | **학습/연구** | **Safetensors** | **PyTorch** (Unsloth) | **Linux** / WSL2 | **Conda** (가상환경) |	
+
