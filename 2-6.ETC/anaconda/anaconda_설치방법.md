@@ -39,6 +39,9 @@ wget https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-x86_64.sh
 ```
 - 참고 - 가벼운 환경이 필요하다면 `Miniconda` 설치를 권장
 	- 설치 방식은 위와 동일하며 파일만 `Miniconda3-latest-Linux-x86_64.sh`로 변경
+	```
+	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+	```
 
 ### 2. 설치 스크립트 실행
 
