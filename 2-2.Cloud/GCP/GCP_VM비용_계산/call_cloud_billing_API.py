@@ -9,6 +9,7 @@
 # 사전 작업 : 
     # 1. gcloud CLI 설치 및 초기화
     # 2. gcloud auth application-default login 명령어로 인증된 계정의 Application Default Credentials(ADC) 설정
+    # 3. Google Cloud Billing API 활성화
 # ==============================
 
 import requests
