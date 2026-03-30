@@ -1,0 +1,11 @@
+curl "http://10.0.1191:8983/solr/admin/collections?action=CREATEALIAS\
+&name=test_kr\
+&router.name=time\
+&router.field=tstamp\
+&router.start=2022-01-01T00:00:00Z\
+&router.interval=%2B1YEAR\
+&router.maxFutureMs=3600000\
+&create-collection.collection.configName=_default\
+&create-collection.numShards=8\
+&create-collection.replicationFactor=2\
+&create-collection.maxShardsPerNode=4"

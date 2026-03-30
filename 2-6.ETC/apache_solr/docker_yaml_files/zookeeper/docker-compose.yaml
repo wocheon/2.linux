@@ -1,0 +1,62 @@
+version: '3.3'
+
+services:
+  # --- Zookeeper Ensemble (3 Nodes) ---
+  zoo1:
+    #image: zookeeper:3.8
+    build: .
+    container_name: zoo1
+    restart: always
+    user: 2181:2181  # 호스트의 UID:GID로 실행됨
+    hostname: zoo1
+    ports:
+      - 2181:2181
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2182 server.3=zoo3:2888:3888;2183
+      ZOO_4LW_COMMANDS_WHITELIST: "*"
+      ZOO_CFG_EXTRA: "reconfigEnabled=false"
+    volumes:
+      - ./zk_data/zoo1/data:/data
+      - ./zk_data/zoo1/datalog:/datalog
+
+  zoo2:
+    build: .
+    #image: zookeeper:3.8
+    container_name: zoo2
+    restart: always
+    user: 2181:2181  # 호스트의 UID:GID로 실행됨
+    hostname: zoo2
+    ports:
+      - 2182:2182
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_PORT: 2182
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2182 server.3=zoo3:2888:3888;2183
+      ZOO_4LW_COMMANDS_WHITELIST: "*"
+      ZOO_CFG_EXTRA: "reconfigEnabled=false"
+    volumes:
+      - ./zk_data/zoo2/data:/data
+      - ./zk_data/zoo2/datalog:/datalog
+
+  zoo3:
+    build: .
+    #image: zookeeper:3.8
+    container_name: zoo3
+    restart: always
+    user: 2181:2181  # 호스트의 UID:GID로 실행됨
+    hostname: zoo3
+    ports:
+      - 2183:2183
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_PORT: 2183
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2182 server.3=zoo3:2888:3888;2183
+      ZOO_4LW_COMMANDS_WHITELIST: "*"
+      ZOO_CFG_EXTRA: "reconfigEnabled=false"
+    volumes:
+      - ./zk_data/zoo3/data:/data
+      - ./zk_data/zoo3/datalog:/datalog
+
+

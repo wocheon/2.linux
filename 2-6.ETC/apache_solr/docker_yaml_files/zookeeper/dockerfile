@@ -1,0 +1,16 @@
+# 공식 Zookeeper 이미지 사용
+FROM zookeeper:3.8
+
+# 권한 수정을 위해 잠시 root로 전환
+USER root
+
+# 내부 기존 zookeeper 계정(1000)을 2181로 완전 개조
+RUN groupmod -g 2181 zookeeper && \
+    usermod -u 2181 -g 2181 zookeeper
+
+# 내부 기본 디렉토리들의 소유권도 바뀐 UID(2181)에 맞게 새로고침
+RUN chown -R zookeeper:zookeeper /data /datalog /conf || true
+
+# 다시 zookeeper(이제는 UID 2181)로 계정 전환
+USER zookeeper
+

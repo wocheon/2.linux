@@ -114,8 +114,8 @@ GKE(Google Kubernetes Engine)에서는 Pod에서 전송되는 패킷의 소스 I
 
 #### 1. GKE 노드 내 Private Endpoint 연결 테스트
 ```bash
-$ nc -vz 10.2.1.100 443
-(UNKNOWN) [10.2.1.100] 443 (https) open
+$ nc -vz 10.0.1.100 443
+(UNKNOWN) [10.0.1.100] 443 (https) open
 # -> 노드 상에서는 정상 연결 가능한 상태임을 확인
 ```
 
@@ -146,7 +146,7 @@ connection-test-pod    1/1     Running    0    10s     100.65.0.50    [nodename]
 - 2.3\. Pod 내에서 telnet 명령을 실행하여 연결 가능 여부 확인
 
 ```bash
-$ kubectl exec -it connection-test-pod – timeout 3 telnet 10.2.1.100 443
+$ kubectl exec -it connection-test-pod – timeout 3 telnet 10.0.1.100 443
 command terminated with exit code 143
 # -> Pod IP로는 Private endpoint로 연결 불가능
 ```
@@ -222,8 +222,8 @@ MASQUERADE   all    – anywhere    anywhere     /* ip-masq-agnet: outbound traf
 #### **4\. Pod 내에서 telnet 명령을 실행하여 연결 가능 여부 확인**
 
 ```sh
-$ kubectl exec -it connection-test-pod – timeout 3 telnet 10.2.1.100 443
-Trying 10.2.1.100 …
-Connected to 10.2.1.100.
+$ kubectl exec -it connection-test-pod – timeout 3 telnet 10.0.1.100 443
+Trying 10.0.1.100 …
+Connected to 10.0.1.100.
 # > Pod내에서 Private Endpoint 연결시 SNAT 가 발생하여 정상 연결 확인**
 ```

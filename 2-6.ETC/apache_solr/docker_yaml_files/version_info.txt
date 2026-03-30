@@ -1,0 +1,10 @@
+# Docker
+Docker version 28.1.1, build 4eba377
+
+# Docker Compose 
+docker-compose version 1.25.0, build unknown
+
+
+# Zookeeper Image : zookeeper:3.8
+
+# Solr Image : solr:9.8
