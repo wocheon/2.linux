@@ -1,15 +1,13 @@
-### 1. 요약
+## 개요
 
-Ubuntu 24.04 LTS 환경에서 식별된 모든 아키텍처적 결함(권한 격리, 3000번 포트 바인딩, Passenger 기본 젬 충돌, DB 마이그레이션 이력 누락)을 교정한 최종 설치 파이프라인이다. Redmine 코어 마이그레이션 단계에 Slack 연동 플러그인(Slack Plugin)의 다운로드 및 데이터베이스 갱신 절차를 통합하여 단일 프로비저닝(Single Provisioning)으로 구성했다.
-
-### 2. 개념 설명
+* Ubuntu 24.04 LTS 환경에서 식별된 모든 아키텍처적 결함(권한 격리, 3000번 포트 바인딩, Passenger 기본 젬 충돌, DB 마이그레이션 이력 누락)을 교정한 최종 설치 파이프라인이다. Redmine 코어 마이그레이션 단계에 Slack 연동 플러그인(Slack Plugin)의 다운로드 및 데이터베이스 갱신 절차를 통합하여 단일 프로비저닝(Single Provisioning)으로 구성했다.
 
 * **플러그인 마이그레이션 (Plugin Migration)**: 코어 시스템의 `db:migrate`와 별개로, 서드파티 플러그인이 요구하는 전용 데이터베이스 테이블이나 컬럼을 추가하기 위해 `rake redmine:plugins:migrate` 명령어를 실행하는 구조적 갱신 작업이다.
 * **Webhook 기반 브로드캐스팅 (Webhook Broadcasting)**: Redmine 서버 내부의 이벤트(이슈 생성, 상태 변경 등)를 감지하여, 외부 서비스인 Slack의 Inbound Webhook URL로 JSON 형태의 HTTP POST 요청을 발송하는 단방향 이벤트 기반 아키텍처.
+* 사전에 원본 서버에서 추출한 **전체 DB 덤프(`redmine_backup.sql`)**, **마이그레이션 이력 단독 덤프(`schema_migrations_only.sql`)**, 첨부파일(`redmine_files.tar.gz`)이 `/tmp/` 경로에 준비되어 있다고 가정한다. 모든 명령어는 명시된 권한 컨텍스트 내에서 순차적으로 실행한다.
 
-### 3. 실행 가능한 예시와 코드
 
-사전에 원본 서버에서 추출한 **전체 DB 덤프(`redmine_backup.sql`)**, **마이그레이션 이력 단독 덤프(`schema_migrations_only.sql`)**, 첨부파일(`redmine_files.tar.gz`)이 `/tmp/` 경로에 준비되어 있다고 가정한다. 모든 명령어는 명시된 권한 컨텍스트 내에서 순차적으로 실행한다.
+## 설치 과정
 
 **1단계: OS 의존성 및 전역 젬 충돌 해결 (`root` 권한)**
 
