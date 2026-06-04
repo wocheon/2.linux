@@ -53,7 +53,8 @@ MySQL에서 exporter 계정 생성:
 ```sql
 mysql -u root -pwelcome1
 CREATE USER 'exporter'@'localhost' IDENTIFIED BY 'exporter_password' WITH MAX_USER_CONNECTIONS 2;
-GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'localhost';
+#GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'localhost';
+GRANT PROCESS, REPLICATION CLIENT, SELECT, SUPER, SLAVE MONITOR ON *.* TO 'exporter'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
