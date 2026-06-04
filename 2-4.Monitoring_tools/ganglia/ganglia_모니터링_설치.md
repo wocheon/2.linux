@@ -212,3 +212,21 @@ Feb 08 14:16:12 gcp-ansible-test gmetad[2080]: Data thread 140076934088448 is mo
 Feb 08 14:16:12 gcp-ansible-test gmetad[2080]: 127.0.0.1
 # 정상 기동확인
 ```
+
+
+## Gangalia 설치 (Ubuntu 24.04 LTS)
+```bash
+# Ubuntu Universe 저장소 활성화 및 패키지 동시 설치
+sudo add-apt-repository universe -y
+sudo apt update -y
+sudo apt install -y ganglia-monitor gmetad ganglia-webfrontend rrdtool apache2
+
+# 웹 프론트엔드 Apache 가상 호스트 설정 구성
+sudo cp /etc/ganglia-webfrontend/apache.conf /etc/apache2/sites-available/ganglia.conf
+sudo a2ensite ganglia.conf
+sudo systemctl reload apache2
+
+# 서비스 데몬 재시작 및 영구 활성화
+sudo systemctl enable --now ganglia-monitor
+sudo systemctl enable --now gmetad
+```
