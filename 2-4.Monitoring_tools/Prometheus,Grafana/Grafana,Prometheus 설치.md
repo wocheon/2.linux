@@ -52,12 +52,25 @@ systemctl enable prometheus --now
 
 ## Grafana
 
-* Grafana 설치
+* Grafana 설치 (CentOS7)
 ```bash
 yum install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-10.0.2-1.x86_64.rpm
 yum remove https://dl.grafana.com/enterprise/release/grafana-enterprise-10.0.2-1.x86_64.rpm
 systemctl start grafana-server 
 ```
+
+* Grafana 설치 (Ubuntu 24.04 LTS)
+```bash
+# [Ubuntu 24.04 LTS]
+# 1. 패키지 다운로드
+wget https://dl.grafana.com/enterprise/release/grafana-enterprise_10.0.2_amd64.deb
+
+# 2. 로컬 패키지 설치 (의존성 자동 해결)
+apt install -y ./grafana-enterprise_10.0.2_amd64.deb
+systemctl start grafana-server 
+```
+
+
 </br>
 
 
