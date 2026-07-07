@@ -1,5 +1,0 @@
-configparser
-pymysql
-requests
-elasticsearch
-psycopg2-binary

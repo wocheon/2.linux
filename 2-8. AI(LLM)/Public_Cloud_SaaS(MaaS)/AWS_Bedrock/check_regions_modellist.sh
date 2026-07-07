@@ -1,1 +1,0 @@
-aws bedrock list-inference-profiles --region ap-northeast-2
