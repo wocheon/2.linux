@@ -183,3 +183,12 @@ EOF
 gcloud compute instances list --format="csv[separator='\t'](name,zone,machineType,INTERNAL_IP,EXTERNAL_IP,status)" --sort-by zone --filter="status=RUNNING"
 ```
 
+
+## Gcloud명령으로 특정 VM 콘솔 접근
+```bash
+# VM 콘솔 접근 허용
+gcloud compute instances add-metadata [VM] --zone=asia-northeast3-a --metadata=serial-port-enable=TRUE
+
+# Cloud Shell 등에서 VM 콘솔 접근 (systemd 로그 폭주를 차단하기위해 extra-args 사용)
+gcloud compute connect-to-serial-port selenium-crawler-01 --zone=asia-northeast3-a --port=1 --extra-args replay-lines=0,on-dropped-output=ignore
+```
