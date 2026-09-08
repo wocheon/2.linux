@@ -1,0 +1,7 @@
+#user1
+user1,WEB/WAS,fastapi-vm,10.0.8.10,asia-northeast3-a,e2-small,2,2
+user1,AI모델,dev-gpu-vm,10.0.9.34,asia-northeast3-b,n1-higmem-8,8,52
+#user2
+user2,DB,dev-db,10.0.9.3,asia-northeast3-a,n2-standard-8,8,32
+user2,AI모델,prd-gpu-vm,10.0.9.33,asia-northeast3-b,n1-highcpu-16,16,14.4
+user2,AI모델,dev-gpu-vm,10.0.9.34,asia-northeast3-b,n1-higmem-8,8,52

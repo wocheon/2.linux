@@ -111,21 +111,18 @@ user2,PROD,vm-3,192.168.1.130,asia-northeast3-a,n1-standard-8,8,32
 
 # 현재 접속한 사용자 계정명 읽기
 USER=$(whoami)
-if [ $USER == 'root' ];then
+if [ "$USER" == 'root' ]; then
     echo "Root User 사용불가"
-        exit 0
+    exit 1
 fi
 
 # 실행중인 서버 목록을 OPTIONS 배열에 저장
-OPTIONS=()
-first_line=true
+OPTIONS=("구분 서버명 IP ZONE Machine_Type (vCPUs,Memory)")
 
-# options_user.txt 파일 읽기
+# 서버 목록 파일 읽기
 while IFS=',' read -r account server_type server_name ip zone machine_type vcpus memory; do
-        if $first_line; then
-        # 헤더를 그대로 추가
-        OPTIONS+=("구분 서버명 IP ZONE Machine_Type (vCPUs,Memory)")
-        first_line=false
+    # 빈 줄과 주석은 제외
+    if [ -z "$account" ] || [[ "$account" == \#* ]]; then
         continue
     fi
 
@@ -135,8 +132,8 @@ while IFS=',' read -r account server_type server_name ip zone machine_type vcpus
     fi
 done < /usr/share/bastion_ssh_connect_list.txt
 
-# 실행중인 서버 목록이 없으면 종료
-if [ ${#OPTIONS[@]} -eq 0 ]; then
+# 헤더 외에 서버 목록이 없으면 종료
+if [ "${#OPTIONS[@]}" -eq 1 ]; then
     echo "$USER 계정에 대한 서버 목록이 없습니다."
     exit 1
 fi
@@ -158,12 +155,14 @@ CHOICE=$((
 if [ -n "$CHOICE" ]; then
     # 선택된 항목에서 서버 정보를 추출
     SERVER_INFO=$(echo "$CHOICE" | awk '{print $3}' | xargs)
-    SELECTED=$(grep -w "$SERVER_INFO" /usr/share/bastion_ssh_connect_list.txt | head -n 1)
+    SELECTED=$(awk -F',' -v user="$USER" -v ip="$SERVER_INFO" \
+        '$1 == user && $4 == ip { print; exit }' \
+        /usr/share/bastion_ssh_connect_list.txt)
 
     if [ -n "$SELECTED" ]; then
-        # 서버 정보 분리 (server_type, server_name, ip, status)
-        IFS=',' read -r account server_type server_name ip zone vm_machine_type specs <<<"$SELECTED"
-                echo -e "\E[;35m* Selected_VM : $server_name ($ip) - $zone \n  Machine_Type : ${vm_machine_type} (${specs})\E[0m"
+        # 선택한 서버 정보 분리
+        IFS=',' read -r account server_type server_name ip zone vm_machine_type vcpus memory <<<"$SELECTED"
+        echo -e "\E[;35m* Selected_VM : $server_name ($ip) - $zone \n  Machine_Type : ${vm_machine_type} (${vcpus},${memory})\E[0m"
         sshpass ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$ip"
     else
         echo "유효하지 않은 선택입니다."
