@@ -1,0 +1,23 @@
+* text=auto
+
+# Cross-platform scripts and configuration files.
+*.sh      text eol=lf
+*.py      text eol=lf
+*.groovy  text eol=lf
+*.yaml    text eol=lf
+*.yml     text eol=lf
+*.json    text eol=lf
+*.md      text eol=lf
+*.txt     text eol=lf
+*.conf    text eol=lf
+*.cfg     text eol=lf
+*.xml     text eol=lf
+
+# Binary artifacts and images.
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.jar     binary
+*.war     binary
+*.class   binary

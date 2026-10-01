@@ -19,7 +19,7 @@ echo "현재 스크립트 위치: $SCRIPT_DIR"
 
 # 3. 심볼릭 링크까지 해석하는 방법 (가장 정확)
 # realpath를 사용하면 심볼릭 링크를 따라가 원본 경로를 정확히 확인가능
-3. 심볼릭 링크까지 해석하는 방법 (가장 정확)
+# 3. 심볼릭 링크까지 해석하는 방법 (가장 정확)
 SCRIPT_PATH="$(realpath "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 echo "현재 스크립트 위치: $SCRIPT_DIR"

@@ -1,0 +1,46 @@
+# Editor and OS files
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local environment and credentials
+*.env
+!*.env.example
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+
+# Python runtime files
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Java build outputs and packaged artifacts
+*.class
+*.jar
+*.war
+target/
+build/
+
+# Preserve legacy artifacts moved by this reorganization until they are
+# replaced with reproducible dependency/build definitions.
+!examples/solr/solr_backup/solr_backup.env
+!examples/solr/solr_migration_scripts/test_solr_jdk18/SolrTest.class
+!examples/solr/solr_migration_scripts/test_solr_jdk18/lib/*.jar
+!docs/cicd/jenkins/Sample_warfile/*.war
+
+
+# Logs and temporary outputs
+*.log
+logs/
+tmp/
+
+# Local agent files
+AGENTS.md
+.agents/
+.codex/
+codex-goals/
