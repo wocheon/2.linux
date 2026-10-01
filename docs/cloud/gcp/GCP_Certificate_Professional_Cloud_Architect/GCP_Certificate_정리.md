@@ -279,14 +279,13 @@
 
 ### Cloud Disk 유형별 비교
 
-| 디스크 유형                                      | IOPS가 크기에 따라 증가    | 설명                                   | 주요 특징                                       |
-| ------------------------------------------- | ------------------ | ------------------------------------ | ------------------------------------------- |
-| `pd-ssd`<br>(SSD Persistent Disk)           | ✅ 네                | 고성능 SSD, 트랜잭션이 많은 워크로드에 적합           | - 1TB당 최대 30,000 IOPS<br>- 최대 1,200MB/s 처리량 |
-| `pd-balanced`<br>(Balanced Persistent Disk) | ✅ 네                | 가격 대비 성능 균형, 일반적인 워크로드에 적합           | - 1TB당 약 10,000 IOPS<br>- 최대 600MB/s 처리량    |
-| `pd-extreme`<br>(Extreme Persistent Disk)   | ⚠️ 조건부             | 사용자가 직접 IOPS/처리량 지정<br>고성능 요구 시 사용   | - 최대 120,000 IOPS<br>- 크기에 따라 설정 한계 존재      |
-| `pd-standard`<br>(Standard Persistent Disk) | ⚠️ 일부 증가<br>하지만 낮음 | HDD 기반, 순차적 접근에 적합, 저비용              | - 낮은 IOPS (랜덤 읽기 성능 낮음)<br>- 최대 처리량 낮음      |
-| `local-ssd`<br>(Local SSD)                  | ❌ 고정됨              | VM에 직접 연결된 물리적 SSD<br>초고속 처리 필요 시 사용 | - 인스턴스당 최대 680,000 IOPS<br>- VM 삭제 시 데이터 소실 |
+|유형|특징|사용 사례|
+|---|---|---|
+|`pd-standard`, `pd-balanced`, `pd-ssd`, `pd-extreme`|Persistent Disk 계열. 유형별 성능·비용 다름|일반 블록 스토리지|
+|Hyperdisk Balanced/Extreme/Throughput/ML 등|성능·용량 설정과 머신 계열 지원을 확인|높은 I/O 또는 대용량 처리|
+|Local SSD|호스트 로컬 디스크, 게스트 OS 재부팅 시 데이터 보존|캐시·임시 작업|
 
+정확한 수치와 VM 중지 시 보존 조건은 [디스크 비교 문서](../../GCP_PersistentDisk_로컬SSD차이.md) 및 [Google Cloud 공식 문서](https://cloud.google.com/compute/docs/disks/hyperdisks)를 확인합니다.
 
 <br>
 

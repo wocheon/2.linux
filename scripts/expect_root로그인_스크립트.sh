@@ -2,14 +2,11 @@
 
 script_path=$1
 
-ip=$(hostname -i | gawk '{print $1}')
-host_nm=$(hostname | gawk -F'_' '{print $1}')
-
-if [ $host_nm == 'test' ] || [ $host_nm = 'dev' ]; then
-    pass="welcome1"
-else
-     pass="prod$(hostname -i | gawk '{print $1}' | gawk -F'.' '{print $4}')"
+if [ -z "$script_path" ]; then
+    echo "Usage: $0 <script_path>"
+    exit 1
 fi
+pass='test123' # 로컬 테스트용 임의 비밀번호
 
 expect << EOF
 spawn su 

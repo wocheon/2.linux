@@ -140,43 +140,8 @@ ping google.com #인터넷 가능한경우 사용
 <br>
 
 ## OS 별 VM 시작 스크립트
-### CentOS7
-- password 변경 
-- SELINUX , firewalld off 
-- SSH 설정변경 : root 로그인 허용, Publickey 사용 가능
-- 기본 패키지 설치 : git curl wget bash-completion
 
-### Ubuntu 20.04
-- password 변경
-- SSH 설정변경 : root 로그인 허용, Publickey 사용 가능
-- 기본 패키지 설치 : git
-
-#### CentOS 7	
-```bash
-sudo -i << EOF
-echo "root:welcome1" | /sbin/chpasswd
-echo "wocheon07:welcome1" | /sbin/chpasswd
-sed -i 's/=enforcing/=disabled/g' /etc/selinux/config ; setenforce 0
-systemctl disable firewalld --now
-sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
-sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
-systemctl restart sshd
-yum install -y git curl wget ansible bash-completion
-echo "$(hostname -i) $(hostname)" >> /etc/hosts
-EOF
-```
-
-##### Ubuntu
-```bash
-sudo -i << EOF
-echo "root:welcome1" | /usr/sbin/chpasswd
-echo "wocheon07:welcome1" | /usr/sbin/chpasswd
-sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
-sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
-systemctl restart sshd
-apt-get install -y git
-EOF
-```
+Ubuntu 24.04 LTS를 기본으로, RHEL 계열은 Rocky Linux 9를 사용합니다. 기존 CentOS 7/Ubuntu 20.04의 root 비밀번호 변경, root SSH 허용, 방화벽·SELinux 비활성화 예제는 제거했습니다. 시작/종료 알림 예제는 [GCP 시작/종료 스크립트 설정](GCP_시작or종료_스크립트_설정.md)을 참고합니다.
 
 ## Cloud Shell로 현재 VM 목록 출력 
 ```

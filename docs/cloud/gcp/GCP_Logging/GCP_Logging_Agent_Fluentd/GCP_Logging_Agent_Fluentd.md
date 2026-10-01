@@ -1,5 +1,7 @@
 # GCP 로깅 에이전트 Fluentd 구성 가이드
 
+> **Legacy 테스트 문서:** 신규 VM은 [Ops Agent 설치·파일 로그 수집](../GCP_Ops_Agent_설치.md)을 사용합니다. 이 문서는 기존 Fluentd 구성의 참고용으로만 유지합니다.
+
 ## 개요
 - 이 문서는 Google Cloud Logging Agent와 Fluentd를 사용하여 로그를 수집하고 Google Cloud Logging에 전달하는 방법을 설명합니다.
 - 설치, 구성, 인증 및 적용 확인 단계를 포함합니다.

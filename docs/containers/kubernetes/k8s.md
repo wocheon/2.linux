@@ -1,6 +1,8 @@
 
 # K8S
 
+> **Legacy 테스트 문서:** 여러 시점의 Kubernetes 실습 기록이 함께 있습니다. 버전과 API를 확인한 뒤 필요한 예제만 사용합니다.
+
 ## K8S의 사용
 
 - 퍼블릭클라우드 환경에서의 구성 
@@ -192,21 +194,22 @@ systemctl set-default graphical.target
 #### Docker 설치
 * Docker Repository 및 GPG KEY 등록
 ```bash
-apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-
-add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-
-apt-cache madison docker-ce 
-
-apt-cache madison docker-ce-cli 
+. /etc/os-release
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu ${UBUNTU_CODENAME:-$VERSION_CODENAME} stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 ```
 
 
 * Docker 설치
 ```bash
-apt-get install docker-ce=5:18.09.9~3-0~ubuntu-bionic docker-ce-cli=5:18.09.9~3-0~ubuntu-bionic containerd.io
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 docker --version
 ```
@@ -215,24 +218,20 @@ docker --version
 #### 쿠버네티스(K8S) 설치
 * k8s Repository 및 GPG KEY 등록
 ```bash
-apt-get update
+KUBERNETES_MINOR=v1.37
+sudo mkdir -p -m 755 /etc/apt/keyrings
+curl -fsSL "https://pkgs.k8s.io/core:/stable:/${KUBERNETES_MINOR}/deb/Release.key" \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-
-
-cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
-
-deb http://apt.kubernetes.io/ kubernetes-xenial main
-
-EOF
-
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${KUBERNETES_MINOR}/deb/ /" \
+  | sudo tee /etc/apt/sources.list.d/kubernetes.list
 ```
 
 * k8s 설치
 ```bash
-apt-get update
-
-apt-get install -y kubelet kubeadm kubectl kubernetes-cni
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
 ```
 
 #### Node 2 , Node3 생성
@@ -431,7 +430,7 @@ spec:
       protocol: TCP
 
   - name: test-ctn
-    image: centos:7
+    image: rockylinux:9
     command: ["tail"]  #> 명령실행(ENTRYPOINT)
     args: ["-f", "/dev/null"] #> 명령실행(CMD)
 
@@ -488,7 +487,7 @@ spec:
           protocol: TCP
 
       - name: test-ctn
-        image: centos:7
+        image: rockylinux:9
         command: ["tail"]
         args: ["-f", "/dev/null"]
 ```
@@ -537,7 +536,7 @@ spec:
           protocol: TCP
 
       - name: test-ctn
-        image: centos:7
+        image: rockylinux:9
         command: ["tail"]
         args: ["-f", "/dev/null"]
 ```
@@ -582,7 +581,7 @@ spec:
           protocol: TCP
 
       - name: test-ctn
-        image: centos:7
+        image: rockylinux:9
         command: ["tail"]
         args: ["-f", "/dev/null"]
 ```
@@ -871,7 +870,7 @@ Events:            <none>
 
 - HAProxy 서버를 만들어서 외부에서 접속할수있도록 연결해보기 
 - HAProxy 구성
-  - OS : CentOS 7.0 (minimal install)
+  - OS : Ubuntu 24.04 LTS (기본) / Rocky Linux 9 (대안)
   - cpu 2, RAM : 2GB , HDD : 20GB
   - NIC : 
     ```bash
@@ -1143,7 +1142,7 @@ metadata:
 spec:
   containers:
   - name: env-ctn
-    image: centos:7
+    image: rockylinux:9
     args: ["tail", "-f", "/dev/null"]
     envFrom:
     - configMapRef:
@@ -1172,7 +1171,7 @@ metadata:
 spec:
   containers:
   - name: env-ctn
-    image: centos:7
+    image: rockylinux:9
     args: ["tail", "-f", "/dev/null"]
     env:
     - name: KEY1
@@ -1209,7 +1208,7 @@ metadata:
 spec:
   containers:
   - name: env-ctn
-    image: centos:7
+    image: rockylinux:9
     args: ["tail", "-f", "/dev/null"]
     volumeMounts:
     - name: cmap-volume
@@ -1291,7 +1290,7 @@ metadata:
 spec:
   containers:
   - name: secret-ctn
-    image: centos:7
+    image: rockylinux:9
     args: ["tail", "-f", "/dev/null"]
     envFrom:
     - secretRef:
@@ -1519,7 +1518,7 @@ metadata:
 spec:
   containers:
   - name: nfs-mount-ctn
-    image: centos:7
+    image: rockylinux:9
     args: ["tail", "-f", "/dev/null"]
     volumeMounts:
     - name: nfs-volume

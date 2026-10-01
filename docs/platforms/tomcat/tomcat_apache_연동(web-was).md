@@ -1,180 +1,80 @@
 # Apache-Tomcat 연동 (web-was)
 
 ## 기본세팅
-* OS : centos7
-* selinux, firewalld disabled
-* vpc 방화벽 80,443,8080 open
-* web ip : 192.168.1.100
-* was ip : 192.168.2.200
-* JDK Version : 1.8.0
-* Tomcat Version : 8.5.91
- 
+- 기본 OS: Ubuntu 24.04 LTS / 대안: Rocky Linux 9
+- WAS: Eclipse Temurin JDK 25 LTS + Tomcat 11.0.26
+- 예시 IP: WEB `192.168.1.100`, WAS `192.168.2.200`
+- WEB 80/443, WEB→WAS 8080만 허용합니다. 방화벽과 SELinux는 끄지 않습니다.
+- Tomcat 11은 Jakarta API를 사용합니다. `javax.*` 기반 WAR는 마이그레이션이 필요합니다.
+
 ## WAS (Tomcat) 세팅
-### JDK 설치
-* 패키지 설치
+JDK 25는 [Adoptium 공식 DEB 저장소](https://adoptium.net/installation/linux/)에서 설치합니다.
+
 ```bash
-yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel
-readlink -f /usr/bin/java
+sudo apt update
+sudo apt install -y curl gpg
+curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public \
+  | gpg --dearmor | sudo tee /usr/share/keyrings/adoptium.gpg > /dev/null
+echo 'deb [signed-by=/usr/share/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb noble main' \
+  | sudo tee /etc/apt/sources.list.d/adoptium.list
+sudo apt update
+sudo apt install -y temurin-25-jdk
+sudo useradd --system --home /opt/tomcat --shell /usr/sbin/nologin tomcat
+curl -fLO https://dlcdn.apache.org/tomcat/tomcat-11/v11.0.26/bin/apache-tomcat-11.0.26.tar.gz
+sudo mkdir -p /opt/tomcat
+sudo tar -xzf apache-tomcat-11.0.26.tar.gz -C /opt/tomcat --strip-components=1
+sudo chown -R tomcat:tomcat /opt/tomcat
 ```
 
-* 환경변수 세팅
->vi /etc/profile
-```bash
-JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.372.b07-1.el7_9.x86_64
-PATH=$PATH:$JAVA_HOME/bin
-CLASSPATH=$JAVA_HOME/jre/lib:$JAVA_HOME/lib/tools.jar
-```
+다운로드 전 [Tomcat 공식 페이지](https://tomcat.apache.org/download-11)에서 현재 버전·체크섬을 확인합니다. Rocky Linux 9은 동일 JDK/Tomcat 절차에서 `apt` 대신 `dnf`를 사용합니다.
 
-### Tomcat설치
-
-* 패키지 설치
-```bash
-wget https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.91/bin/apache-tomcat-8.5.91.tar.gz
-tar -zxvf apache-tomcat-8.5.91.tar.gz 
-mv apache-tomcat-8.5.91/ tomcat; mv tomcat /usr/local/lib/
-```
-
-* 환경변수 세팅
->vi /etc/profile
-```bash
-JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.372.b07-1.el7_9.x86_64
-JRE_HOME=$JAVA_HOME/jre
-
-CATALINA_HOME=/usr/local/lib/tomcat
-PATH=$PATH:$JAVA_HOME/bin:$JRE_HOME/bin:$CATALINA_HOME/bin
-CLASSPATH=.:$JAVA_HOME/lib/tools.jar:$CATALINA_HOME/lib/jsp-api.jar:$CATALINA_HOME/lib/servlet-api.jar
-
-export JAVA_HOME
-export JRE_HOME
-export CLASSPATH CATALINA_HOME
-```
-<br>
-
-* 환경변수 재설정
-```bash
-source /etc/profile
-```
-
-### Tomcat 동작 확인
-- 서비스 기동
-```bash
-cd /usr/local/lib/tomcat/bin/
-./startup.sh
-```
-
-- 브라우저에서 정상작동 확인
-```bash
-curl localhost:8080
-```
-
-### Tomcat 서비스 등록 
-* /etc/init.d/tomcat 등록
-	* $\textcolor{orange}{\textsf{* 해당 방법은 문제가 있으므로 /etc/systemd/system/tomcat.service 추가하는 방식으로 진행 }}$ 
->vi /etc/init.d/tomcat 
-```bash
-export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.372.b07-1.el7_9.x86_64
-export CATALINA_HOME=/usr/local/lib/tomcat
-
-case "$1" in
-    start)
-        echo "Starting tomcat: "
-        $CATALINA_HOME/bin/startup.sh
-        ;;
-    stop)
-        echo "Shutting down tomcat: "
-        $CATALINA_HOME/bin/shutdown.sh
-        ;;
-    restart)
-        echo "Restarting tomcat: "
-        $CATALINA_HOME/bin/shutdown.sh;
-        $CATALINA_HOME/bin/startup.sh
-        ;;
-    *)
-        echo "Usage: service tomcat {start|stop|restart}"
-        exit 1
-esac
-exit 0
-```
-<br>
-
-* 권한 변경
-```bash
-chmod 775 tomcat
-```
-<br>
-
-* /etc/systemd/system/tomcat.service 등록
->vi /etc/systemd/system/tomcat.service
-```bash
+`/etc/systemd/system/tomcat.service`:
+```ini
 [Unit]
-Description=tomcat
-After=network.target syslog.target
+Description=Apache Tomcat 11
+After=network.target
 
 [Service]
-Type=forking
-Environment=/usr/local/lib/tomcat
-User=root
-Group=root
-ExecStart=/usr/local/lib/tomcat/bin/startup.sh
-ExecStop=/usr/local/lib/tomcat/bin/shutdown.sh
+Type=simple
+User=tomcat
+Group=tomcat
+Environment=CATALINA_HOME=/opt/tomcat
+ExecStart=/opt/tomcat/bin/catalina.sh run
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
 ```
-<br>
+
+Tomcat은 시스템 기본 `java`를 사용합니다. `java -version`으로 JDK 25 적용 여부를 확인합니다.
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now tomcat
+curl -I http://127.0.0.1:8080/
+```
 
 ## WEB (Apache) 세팅
-
-### Apache 설치
 ```bash
-yum install -y httpd
+sudo apt install -y apache2
+sudo a2enmod proxy proxy_http
 ```
 
-### Apache 서비스 기동
-```bash
-systemctl enable httpd --now
-```
+Rocky Linux 9에서는 `sudo dnf install -y httpd`를 사용하고 `mod_proxy`/`mod_proxy_http` 모듈을 확인합니다. 다음 VirtualHost를 Ubuntu의 `/etc/apache2/sites-available/tomcat.conf`에 저장합니다.
 
-### VirtualHost 설정
->vi /etc/httpd/conf/httpd.conf 
-
-```bash
-     56 Include conf.modules.d/*.conf
-     57 LoadModule proxy_module modules/mod_proxy.so
-     58 LoadModule proxy_connect_module modules/mod_proxy_connect.so
-     59 LoadModule proxy_http_module modules/mod_proxy_http.so
-
+```apache
 <VirtualHost *:80>
-       ServerName localhost
-       ProxyRequests Off
-       ProxyPreserveHost On
-       <Proxy *>
-                Order deny,allow
-                Allow from all
-        </Proxy>
-        ProxyPass / http://192.168.2.200:8080/
-		ProxyPassReverse / http://192.168.2.200:8080/
+    ServerName web.example.com
+    ProxyPreserveHost On
+    ProxyPass / http://192.168.2.200:8080/
+    ProxyPassReverse / http://192.168.2.200:8080/
 </VirtualHost>
 ```
-<br>
 
-
-## Reverse Proxy 로 부하분산
-
->vi /etc/httpd/conf/httpd.conf
 ```bash
-<VirtualHost *:80>
-  ServerName shop.playon.tistory.com
-  ProxyRequests Off
-  ProxyPreserveHost On
-  <Location /user>
-    ProxyPass http://user.playon.tistory.com/
-    ProxyPassReverse http://user.playon.tistory.com/
-  </Location>
-  <Location /order>
-    ProxyPass http://order.playon.tistory.com/
-    ProxyPassReverse http://order.playon.tistory.com/
-  </Location>
-</VirtualHost>
+sudo a2ensite tomcat.conf
+sudo apache2ctl configtest
+sudo systemctl reload apache2
 ```
-<br>
+
+운영 환경은 HTTPS를 적용하고 WAS 8080을 외부에 직접 공개하지 않습니다.
