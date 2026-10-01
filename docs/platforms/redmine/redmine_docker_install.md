@@ -1,73 +1,45 @@
 # Redmine 설치 - Docker
 
-## Docker 설치 
-## Centos7
+> **테스트 문서:** Rocky Linux 9와 Compose v2 기준의 간단한 Redmine 테스트 구성입니다.
 
-### docker 공식 repo 추가 
+## Docker 설치
+## Rocky Linux 9
+
 ```bash
-yum install -y yum-utils device-mapper-persistent-data lvm2
-yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo dnf install -y dnf-plugins-core
+sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+sudo systemctl enable --now docker
+docker compose version
 ```
 
-### 설치가능한 도커 버전 확인
-```bash
-yum list docker-ce --showduplicates | sort -r
-```
-
-### docker 최신버전 설치 
-```bash
-yum install -y docker-ce.x86_64
-```
-
-### 버전확인 
-```bash
-$ docker --version
-
-Docker version 24.0.5, build ced0996
-```
-## Docker-Compose 설치 
-* docker compose 다운로드
-```bash
-curl  -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-```
-* 권한 변경
-```
-chmod +x /usr/local/bin/docker-compose
-```
-
-* docker compose 버전 확인
-```
-docker-compose -v
-```
 ## yaml 파일 작성 
 
 > docker-compose.yml
 ```
-version: '3.1'
-
 services:
 
   redmine:
-    image: redmine
+    image: redmine:7.0
     restart: always
     ports:
       - 80:3000
     environment:
       REDMINE_DB_MYSQL: db
-      REDMINE_DB_PASSWORD: welcome1
-      REDMINE_SECRET_KEY_BASE: supersecretkey
+      REDMINE_DB_PASSWORD: ${REDMINE_DB_PASSWORD:-redmine_test}
+      REDMINE_SECRET_KEY_BASE: ${REDMINE_SECRET_KEY_BASE:-test_only_secret}
 
   db:
-    image: mysql:8.0
+    image: mysql:8.4
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: welcome1
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-mysql_test}
       MYSQL_DATABASE: redmine
 ```
 
-## docker-compose 실행
+## docker compose 실행
 ```
-docker-compose -f docker-compose.yml up -d
+docker compose -f docker-compose.yml up -d
 ```
 
 ## 웹브라우저로 접속확인 

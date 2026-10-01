@@ -1,10 +1,12 @@
 # Apache Kafka Connect
 
-## 개요 
+> **테스트 구성:** Kafka 4.2.2와 Debezium 3.2.7을 사용합니다. 예제 DB 비밀번호는 로컬 테스트용입니다.
+
+## 개요
 - Apache Kafka를 통해 DBMS 내 데이터 실시간 동기화(CDC)를 구현
 - 각 DBMS 별 Connector 구성 (Mysql/MariaDB/PostgreDB)
 
-## Apache Kafka Connect? 
+## Apache Kafka Connect?
 - Apache Kafka의 데이터 통합 프레임워크
 - 다양한 시스템과 Kafka 간 데이터를 손쉽게 전송하고 동기화할 수 있게 설계된 오픈소스 플랫폼
 - 복잡한 커스텀 코드 없이도 데이터 소스와 싱크 간 신뢰성 높은 파이프라인 구축을 지원
@@ -15,9 +17,9 @@
 - Worker
     - 커넥터와 태스크를 실행하는 서버 프로세스
     - 단일 프로세스로 사용되는 Standalone 모드와 클러스터 형태로 구성되는 Distributed 모드 중 하나로 동작
-    -  REST API를 제공하여 커넥터의 등록, 설정, 시작, 중지 명령을 받아 수행 
+    -  REST API를 제공하여 커넥터의 등록, 설정, 시작, 중지 명령을 받아 수행
 
-- Connector 
+- Connector
     - 외부 시스템과 Kafka 사이의 입출력 역할을 하는 플러그인
     - 소스(Source) 커넥터와 싱크(Sink) 커넥터로 구분
 
@@ -37,7 +39,7 @@
         - Kafka와 외부 시스템 간 데이터를 전달할 때 메시지 포맷(예: JSON, Avro 등) 변환을 담당
 
 
-### Apache Kafka Connect 동작 방식 
+### Apache Kafka Connect 동작 방식
 1. Kafka Connect 워커가 커넥터를 로드하고, 태스크를 분산 배치하여 데이터 이동을 준비
 
 2. Source Connector Task가 외부 시스템에서 변경 데이터를 읽어 Kafka 토픽에 전송
@@ -47,7 +49,7 @@
 4. 태스크 처리 상태는 Kafka 내부 토픽에 오프셋으로 저장
     -  복원/재시작 가능
 
-5. 메시지는 필요에 따라 SMT를 통해 변환되며 컨버터를 통해 포맷을 통일 
+5. 메시지는 필요에 따라 SMT를 통해 변환되며 컨버터를 통해 포맷을 통일
 
 
 ### 대표적인 Kafka Connect 배포처
@@ -56,32 +58,32 @@
     - https://hub.docker.com/r/debezium/connect
     - 오픈소스 CDC 소스 커넥터 집합
     - MySQL, PostgreSQL, MongoDB, SQL Server 등 다양한 DBMS 변경 데이터를 Kafka에 스트리밍
-    
-    
-- Confluent 
+
+
+- Confluent
     - https://docs.confluent.io/platform/current/overview.html
     - Confluent사가 제공하는 엔터프라이즈 Kafka 배포판
     - Kafka Connect를 포함하며 관리형 UI, 보안, 모니터링, 다양한 커넥터를 지원
 
-- Apache Kafka 공식 커넥터 
-    - Apache Kafka 프로젝트 내 기본 제공하는 소스 및 싱크 커넥터 
+- Apache Kafka 공식 커넥터
+    - Apache Kafka 프로젝트 내 기본 제공하는 소스 및 싱크 커넥터
         - EX) FileStream Source/Sink, JDBC Source/Sink 등
 
 
 ## Apache Kafka Connect 기반 CDC 아키텍쳐
-- Apache Kafka Connect를 통해 DBMS 내 특정 테이블의 실시간 동기화 아키텍쳐를 구성 가능 
-- Debezium에서 배포된 Connector를 사용하여 구성 
+- Apache Kafka Connect를 통해 DBMS 내 특정 테이블의 실시간 동기화 아키텍쳐를 구성 가능
+- Debezium에서 배포된 Connector를 사용하여 구성
 - kafka/kafka Connect는 Docker Container를 사용하여 구성
 
 - 각 DB는 Docker Container로 구성
-    - 테스트 용도이므로 별도 서버를 구성하지않고 Docker로만 구성하여 진행 
+    - 테스트 용도이므로 별도 서버를 구성하지않고 Docker로만 구성하여 진행
 
 - Source Connector는 각 DBMS 별로 구성해야하며 Sink Connector는 JDBC Connector를 사용
 
-### Apache Kafka Connect 기반 CDC 아키텍쳐 구성도 
+### Apache Kafka Connect 기반 CDC 아키텍쳐 구성도
 
 ```
-[DBMS (Source)] 
+[DBMS (Source)]
       │
       │ CDC (변경 로그 / Transaction Log)
       ▼
@@ -100,8 +102,8 @@
 [DBMS (Target) 또는 Data Lake / NoSQL 등]
 ```
 
-## Apache Kafka/Apache Kafka Connect 구성 
-- 각 아키텍쳐별로 사용될 Docker Network 구성 
+## Apache Kafka/Apache Kafka Connect 구성
+- 각 아키텍쳐별로 사용될 Docker Network 구성
 ```sh
 docker network create mariadb-network
 docker network create mysql-network
@@ -109,19 +111,18 @@ docker network create postgre-network
 # kafka-network는 Docker-compose 실행시 자동 생성
 ```
 
-- Docker-Compose로 kafka/kafka Connect 구성 
+- Docker-Compose로 kafka/kafka Connect 구성
 ```yml
-version: '3'
 services:
   kafka:
-    image: apache/kafka:3.9.1   # kafka 공식 Docker Image 사용
+    image: apache/kafka:4.2.2   # kafka 공식 Docker Image 사용
     container_name: kafka
     hostname: kafka
     ports:
       - "9092:9092"
       - "9093:9093"  # 컨트롤러 포트
     environment:
-      KAFKA_CLUSTER_ID: "test-kafka-custer"  
+      KAFKA_CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: "broker,controller"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
@@ -142,7 +143,7 @@ services:
       - postgre-network
 
   kafka-connect:
-    image: debezium/connect:2.7.3.Final # Debezium 커넥터 Docker Image 사용
+    image: quay.io/debezium/connect:3.2.7.Final # Debezium 커넥터 Docker Image 사용
     container_name: kafka-connect
     depends_on:
       - kafka
@@ -160,7 +161,7 @@ services:
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_PLUGIN_PATH: "/kafka/connect"
 #    volumes:
-#      - ./plugins:/kafka/connect   # 별도 플러그인 필요시 활성화 
+#      - ./plugins:/kafka/connect   # 별도 플러그인 필요시 활성화
     networks:
       - kafka-network
       - mariadb-network
@@ -188,15 +189,10 @@ volumes:
   kafka-data:
 ```
 
-- docker-compose 로 컨테이너 실행 
+- Docker Compose로 컨테이너 실행
 ```
-docker-compose up -d 
-WARN[0000] /home/ciw0707/docker_images/kafka_connect/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
-[+] Running 4/4
- ✔ Network kafka-network              Created                                                                                                                                                               0.1s
- ✔ Volume "kafka_connect_kafka-data"  Created                                                                                                                                                               0.0s
- ✔ Container kafka                    Started                                                                                                                                                               0.7s
- ✔ Container kafka-connect            Started                                                                                                                                                               0.9s
+docker compose up -d
+docker compose ps
 ```
 
 
@@ -206,18 +202,18 @@ docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server l
 ```
 
 
-- kafka Connect 내 사용가능한 Connector 목록 조회 
-```sh 
+- kafka Connect 내 사용가능한 Connector 목록 조회
+```sh
 curl -X GET  http://localhost:8083/connector-plugins | jq .
 ```
 
 
-##  Apache Kafka Connect 기반 CDC 아키텍쳐 - MariaDB 
+##  Apache Kafka Connect 기반 CDC 아키텍쳐 - MariaDB
 
-### Mariadb 구성 
+### Mariadb 구성
 
 
-#### DB 구성용 설정 파일 
+#### DB 구성용 설정 파일
 - init.sql
 ```sql
 create database if not exists connect_test_db;
@@ -244,7 +240,7 @@ gtid_strict_mode=ON
 gtid_domain_id=3
 ```
 
-#### mariadb-main (Source) docker Container 
+#### mariadb-main (Source) docker Container
 
 ```sh
 docker run -d \
@@ -260,7 +256,7 @@ docker run -d \
   mariadb:10.5.10
 ```
 
-#### mariadb-replica (Sink) docker Container 
+#### mariadb-replica (Sink) docker Container
 
 ```sh
 docker run -d \
@@ -277,9 +273,9 @@ docker run -d \
 ```
 
 
-### Mariadb Connector 구성 
+### Mariadb Connector 구성
 
-- Source Connector JSON 구성 
+- Source Connector JSON 구성
 > connector_json/mariadb-source-connector.json
 ```json
 {
@@ -305,7 +301,7 @@ docker run -d \
 }
 ```
 
-- Sink Connector JSON 구성 
+- Sink Connector JSON 구성
 > connector_json/mariadb-sink-connector.json
 ```json
 {
@@ -328,7 +324,7 @@ docker run -d \
 ```
 
 
-- Source/Sink Connector 생성 
+- Source/Sink Connector 생성
 
 ```bash
 #!/bin/bash
@@ -342,7 +338,7 @@ curl -X POST -H "Content-Type: application/json" --data @${source_json} http://l
 curl -X POST -H "Content-Type: application/json" --data @${sink_json} http://localhost:8083/connectors
 ```
 
-### Connector 정상 동작 확인 
+### Connector 정상 동작 확인
 
 ```sh
 # 생성된 connector 목록 확인
@@ -388,20 +384,20 @@ curl -s http://localhost:8083/connectors/mariadb-sink-connector/status | jq
 
 
 - Kafka Topic 리스트 확인
-```sh 
+```sh
 $ docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 __consumer_offsets
 connect-configs
 connect-offsets
 connect-status
 mariadb_server
-mariadb_server.connect_test_db.source_table 
+mariadb_server.connect_test_db.source_table
 schema-changes.mariadb
 ```
 
 
 
-#### Connetor 동작 확인 
+#### Connetor 동작 확인
 
 - mariadb-main.connect_test_db.source_table에 데이터 Insert/Update/Delete
 
@@ -417,7 +413,7 @@ delete from source_table where id=4;
 ```
 
 
-- Kafka Conntor용 Topic 내 Message 확인 
+- Kafka Conntor용 Topic 내 Message 확인
 
 ```sh
 $ docker exec -it kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic mariadb_server.connect_test_db.source_table --from-beginning --max-messages 10
@@ -441,15 +437,15 @@ MariaDB [connect_test_db]> select * from target_table;
 4 rows in set (0.001 sec)
 ```
 
-### Mariadb Kafka Connector 삭제 
-- Source/Sink 커넥터 삭제 
+### Mariadb Kafka Connector 삭제
+- Source/Sink 커넥터 삭제
 
-```sh 
+```sh
 $ curl -X DELETE "http://localhost:8083/connectors/mariadb-source-connector
 $ curl -X DELETE "http://localhost:8083/connectors/mariadb-sink-connector
 ```
 
-### Mariadb Kafka Connector Topic 삭제 
+### Mariadb Kafka Connector Topic 삭제
 ```
 docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --delete --bootstrap-server localhost:9092 --topic mariadb_server
 docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --delete --bootstrap-server localhost:9092 --topic mariadb_server.connect_test_db.source_table
@@ -464,11 +460,11 @@ docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --delete --bootstrap-server
 
 
 
-##  Apache Kafka Connect 기반 CDC 아키텍쳐 - Mysql 
+##  Apache Kafka Connect 기반 CDC 아키텍쳐 - Mysql
 
-### Mysql 구성 
+### Mysql 구성
 
-#### DB 구성용 설정 파일 
+#### DB 구성용 설정 파일
 - init.sql
 ```sql
 create database if not exists connect_test_db;
@@ -513,7 +509,7 @@ socket=/var/run/mysqld/mysqld.sock
 !includedir /etc/mysql/conf.d/
 ```
 
-#### mysqldb-main (Source) docker Container 
+#### mysqldb-main (Source) docker Container
 
 ```sh
 docker run -d \
@@ -529,7 +525,7 @@ docker run -d \
   mysql:8.0
 ```
 
-#### mysqldb-replica (Sink) docker Container 
+#### mysqldb-replica (Sink) docker Container
 
 ```sh
 docker run -d \
@@ -545,9 +541,9 @@ docker run -d \
   mysql:8.0
 ```
 
-### Mysql Connector 구성 
+### Mysql Connector 구성
 
-- Source Connector JSON 구성 
+- Source Connector JSON 구성
 > connector_json/mysql-source-connector.json
 ```json
 {
@@ -573,7 +569,7 @@ docker run -d \
 }
 ```
 
-- Sink Connector JSON 구성 
+- Sink Connector JSON 구성
 > connector_json/mysql-sink-connector.json
 ```json
 {
@@ -594,7 +590,7 @@ docker run -d \
   }                                                                                                                                                         }
 ```
 
-- Source/Sink Connector 생성 
+- Source/Sink Connector 생성
 
 ```bash
 #!/bin/bash
@@ -610,7 +606,7 @@ curl -X POST -H "Content-Type: application/json" --data @${sink_json} http://loc
 ```
 
 
-### Connector 정상 동작 확인 
+### Connector 정상 동작 확인
 
 ```sh
 # 생성된 connector 목록 확인
@@ -656,7 +652,7 @@ curl -s http://localhost:8083/connectors/mysql-sink-connector/status | jq
 
 
 - Kafka Topic 리스트 확인
-```sh 
+```sh
 $ docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 __consumer_offsets
 connect-configs
@@ -667,7 +663,7 @@ mysql_server.connect_test_db.source_table
 schema-changes.mysql
 ```
 
-#### Connetor 동작 확인 
+#### Connetor 동작 확인
 
 - mysqldb-main.connect_test_db.source_table에 데이터 Insert/Update/Delete
 
@@ -683,7 +679,7 @@ delete from source_table where id=4;
 ```
 
 
-- Kafka Conntor용 Topic 내 Message 확인 
+- Kafka Conntor용 Topic 내 Message 확인
 
 ```sh
 $ docker exec -it kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic mysql_server.connect_test_db.source_table --from-beginning --max-messages 10
@@ -718,15 +714,15 @@ mysql> select * from target_table;
 ```
 
 
-### Mariadb Kafka Connector 삭제 
-- Source/Sink 커넥터 삭제 
+### Mariadb Kafka Connector 삭제
+- Source/Sink 커넥터 삭제
 
-```sh 
+```sh
 $ curl -X DELETE "http://localhost:8083/connectors/mysql-source-connector
 $ curl -X DELETE "http://localhost:8083/connectors/mysql-sink-connector
 ```
 
-### Mariadb Kafka Connector Topic 삭제 
+### Mariadb Kafka Connector Topic 삭제
 ```
 docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --delete --bootstrap-server localhost:9092 --topic mysql_server
 docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --delete --bootstrap-server localhost:9092 --topic mysql_server.connect_test_db.source_table
@@ -741,9 +737,9 @@ docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --delete --bootstrap-server
 
 ##  Apache Kafka Connect 기반 CDC 아키텍쳐 - PostgreSQL
 
-### PostgreSQL 구성 
+### PostgreSQL 구성
 
-#### DB 구성용 설정 파일 
+#### DB 구성용 설정 파일
 - init.sql
 ```sql
 -- postgres의 경우 별도의 Pubilcation 설정이 있어야 정상적으로 kafka Topic에 전달됨
@@ -769,7 +765,7 @@ wal_keep_size = 64MB
 max_worker_processes = 8
 ```
 
-#### postgres-main (Source) docker Container 
+#### postgres-main (Source) docker Container
 
 ```sh
 docker run -d --name postgres-main \
@@ -781,11 +777,11 @@ docker run -d --name postgres-main \
   -v $(pwd)/custom_conf/custom-postgresql.conf:/etc/postgresql/postgresql.conf \
   -v $(pwd)/custom_conf/custom-pg_hba.conf:/etc/postgresql/pg_hba.conf \
   -v $(pwd)/init.sql:/docker-entrypoint-initdb.d/init.sql \
-  postgres:latest \
+  postgres:17 \
   -c config_file=/etc/postgresql/postgresql.conf
 ```
 
-#### postgres-replica (Sink) docker Container 
+#### postgres-replica (Sink) docker Container
 
 ```sh
 docker run -d --name postgres-replica \
@@ -797,14 +793,14 @@ docker run -d --name postgres-replica \
   -v $(pwd)/custom_conf/custom-postgresql.conf:/etc/postgresql/postgresql.conf \
   -v $(pwd)/custom_conf/custom-pg_hba.conf:/etc/postgresql/pg_hba.conf \
   -v $(pwd)/init.sql:/docker-entrypoint-initdb.d/init.sql \
-  postgres:latest \
+  postgres:17 \
   -c config_file=/etc/postgresql/postgresql.conf
 ```
 
 
-### PostgreSQL Connector 구성 
+### PostgreSQL Connector 구성
 
-- Source Connector JSON 구성 
+- Source Connector JSON 구성
 > connector_json/postgresdb-source-connector.json
 ```json
 {
@@ -832,7 +828,7 @@ docker run -d --name postgres-replica \
 }
 ```
 
-- Sink Connector JSON 구성 
+- Sink Connector JSON 구성
 > connector_json/postgresdb-sink-connector.json
 ```json
 {
@@ -856,7 +852,7 @@ docker run -d --name postgres-replica \
 ```
 
 
-- Source/Sink Connector 생성 
+- Source/Sink Connector 생성
 
 ```bash
 #!/bin/bash
@@ -871,7 +867,7 @@ curl -X POST -H "Content-Type: application/json" --data @${source_json} http://l
 curl -X POST -H "Content-Type: application/json" --data @${sink_json} http://localhost:8083/connectors
 ```
 
-### Connector 정상 동작 확인 
+### Connector 정상 동작 확인
 
 ```sh
 # 생성된 connector 목록 확인
@@ -921,7 +917,7 @@ curl -s http://localhost:8083/connectors/postgres-sink-connector/status | jq
     - Postgres Connector는는 logical decoding 플러그인(pgoutput, wal2json, decoderbufs)을 사용
         - MySQL/SQL Server: binlog에서 테이블 스키마를 직접 알 수 없어서 별도 히스토리 토픽 필요.
         - PostgreSQL: logical replication stream에서 테이블 구조 정보를 직접 제공하기 때문에 별도 토픽이 필요 없음.
-```sh 
+```sh
 $ docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 __consumer_offsets
 connect-configs
@@ -931,7 +927,7 @@ postgres_server.connect_test_db.public.source_table
 # 기존과 다르게 schema-change.postgres 토픽은 생성되지않음
 ```
 
-#### Connetor 동작 확인 
+#### Connetor 동작 확인
 
 - postgres-main.connect_test_db.public.target_table에 데이터 Insert/Update/Delete
 
@@ -947,7 +943,7 @@ delete from public.source_table where id=4;
 ```
 
 
-- Kafka Conntor용 Topic 내 Message 확인 
+- Kafka Conntor용 Topic 내 Message 확인
 
 ```sh
 $ docker exec -it kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic postgres_server.connect_test_db.public.source_table --from-beginning --max-messages 10
@@ -979,15 +975,15 @@ connect_test_db=# select * from public.target_table;
 ```
 
 
-### Mariadb Kafka Connector 삭제 
-- Source/Sink 커넥터 삭제 
+### Mariadb Kafka Connector 삭제
+- Source/Sink 커넥터 삭제
 
-```sh 
+```sh
 $ curl -X DELETE "http://localhost:8083/connectors/postgres-source-connector
 $ curl -X DELETE "http://localhost:8083/connectors/postgres-sink-connector
 ```
 
-### Mariadb Kafka Connector Topic 삭제 
+### Mariadb Kafka Connector Topic 삭제
 ```
 docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --delete --bootstrap-server localhost:9092 --topic postgres_server.connect_test_db.public.source_table
 ```

@@ -130,7 +130,7 @@ CMD echo "Starting Job: $JOB_DATA" && \
 docker build -t asia-northeast3-docker.pkg.dev/test-project/docker-image-repo/sleep_test:latest .
 
 # GAR 저장소에 이미지 Push
-docker push image asia-northeast3-docker.pkg.dev/test-project/docker-image-repo/sleep_test:latest
+docker push asia-northeast3-docker.pkg.dev/test-project/docker-image-repo/sleep_test:latest
 ```
 
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-### gcloud_promethes_배치부하분산_스크립트.sh ####
+### gcloud_prometheus_배치부하분산_스크립트.sh ####
 # GCP의 특정 zone 및 이름 패턴을 가진 VM들의 내부 IP를 가져와
 # Prometheus 서버에서 각 VM의 load1, 메모리 사용률, VRAM
 # 사용률을 쿼리하여 가장 부하가 적은 VM을 선택하는 스크립트

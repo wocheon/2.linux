@@ -9,6 +9,10 @@ from google.cloud import compute_v1
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+# 참고용 추정치입니다. 실제 청구액은 Cloud Billing에서 확인합니다.
+CUD_DISCOUNT_RATE = 0.37
+DEFAULT_SCHEDULE_HOURS = 216.0
+
 def calculate_sud(series: str, hours: float, hourly_rate: float):
     total_hours_in_month = 730.0
     usage_fraction = min(hours / total_hours_in_month, 1.0)
@@ -54,7 +58,9 @@ def calculate_monthly_running_hours(start_cron: str, stop_cron: str, timezone_st
             if duration > 0: total_seconds += duration
 
         return round(total_seconds / 3600.0, 1)
-    except Exception: return 216.0
+    except (pytz.UnknownTimeZoneError, ValueError) as exc:
+        warnings.warn(f"스케줄을 계산하지 못해 기본값을 사용합니다: {exc}")
+        return DEFAULT_SCHEDULE_HOURS
 
 def load_pricing_from_csv(csv_path: str, target_region: str) -> dict:
     try: df = pd.read_csv(csv_path)
@@ -115,7 +121,8 @@ def get_instance_schedules(project_id: str, region: str) -> dict:
                     "name": policy.name, "start_cron": policy.instance_schedule_policy.vm_start_schedule.schedule,
                     "stop_cron": policy.instance_schedule_policy.vm_stop_schedule.schedule, "timezone": policy.instance_schedule_policy.time_zone
                 }
-    except Exception: pass
+    except Exception as exc:
+        warnings.warn(f"인스턴스 일정을 조회하지 못했습니다: {exc}")
     return schedule_map
 
 def get_active_commitments(project_id: str, region: str) -> dict:
@@ -135,7 +142,8 @@ def get_active_commitments(project_id: str, region: str) -> dict:
                 for resource in commitment.resources:
                     if resource.type_ == "VCPU": cud_map[series]["vcpu"] += float(resource.amount)
                     elif resource.type_ == "MEMORY": cud_map[series]["ram_gb"] += (float(resource.amount) / 1024.0)
-    except Exception: pass
+    except Exception as exc:
+        warnings.warn(f"활성 약정을 조회하지 못했습니다: {exc}")
     return cud_map
 
 def generate_final_vm_cost_report(project_id: str, csv_path: str = "compute_pricing.csv", target_region: str = "asia-northeast3"):
@@ -238,7 +246,7 @@ def generate_final_vm_cost_report(project_id: str, csv_path: str = "compute_pric
         cov_r = min(cud_r / used_r, 1.0) if used_r > 0 else (1.0 if cud_r > 0 else 0.0)
         avg_cov = 0.0 if (used_v == 0 and used_r == 0) else (cov_v + cov_r) / 2.0
 
-        savings = (used_cost * avg_cov) * 0.37
+        savings = (used_cost * avg_cov) * CUD_DISCOUNT_RATE
         total_cud_savings += savings
         print(f"| {s.upper()} | {used_v:.1f} vCPU / {used_r:.1f}GB | {cud_v:.1f} vCPU / {cud_r:.1f}GB | {avg_cov*100:.1f}% | ₩{used_cost:,.0f} | -₩{savings:,.0f} |")
 
@@ -254,4 +262,5 @@ def generate_final_vm_cost_report(project_id: str, csv_path: str = "compute_pric
 
 # 실행 예:
 # generate_final_vm_cost_report("your-project-id", "compute_pricing.csv", "asia-northeast3")
-generate_final_vm_cost_report("your-project-id", "compute_pricing.csv", "asia-northeast3")
+if __name__ == "__main__":
+    generate_final_vm_cost_report("your-project-id", "compute_pricing.csv", "asia-northeast3")

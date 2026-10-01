@@ -1,5 +1,7 @@
 # Prometheus 리로드 옵션 설정 방법 
 
+> **Legacy 테스트 문서:** Prometheus 2.44.0의 고정 경로 예제입니다. 설치한 버전의 실제 경로에 맞춰 사용합니다.
+
 ## 개요 
 - 기존 Prometheus 서비스는 yml파일을 변경한 뒤 재기동(restart) 가 필요 
 - 특정 옵션을 추가하여 yml파일 설정 변경 후에 reload 할수있도록 설정

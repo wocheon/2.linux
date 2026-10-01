@@ -23,7 +23,7 @@ def get_backup_id():
 
 
 def create_backup(request):
-    trigger_run_url = "https://file.googleapis.com/v1beta1/projects/{}/locations/{}/backups?backupId={}".format(PROJECT_ID, BACKUP_REGION, get_backup_id())
+    trigger_run_url = "https://file.googleapis.com/v1/projects/{}/locations/{}/backups?backupId={}".format(PROJECT_ID, BACKUP_REGION, get_backup_id())
     headers = {
         'Content-Type': 'application/json'
     }

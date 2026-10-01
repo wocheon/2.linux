@@ -1,5 +1,7 @@
 # Scouter (APM) 설치 
 
+> **Legacy 테스트 문서:** EOL된 Tomcat 8.5 기반 예제가 포함되어 있습니다.
+
 ## 기본 구성 
 1. Scouter (192.168.1.101) 
     - Scouter Server 용

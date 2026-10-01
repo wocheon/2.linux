@@ -15,13 +15,13 @@ sudo systemctl enable --now docker
 ### 2. DCGM_Exporter 실행 
 - 서비스를 생성하지 않고 단일 컨테이너로 실행하는 경우 다음과 같이 진행 
 ```
-$ docker run --gpus all -rm -p 9400:9400 --name dcgm_exporter nvcr.io/nvidia/k8s/dcgm-exporter:3.3.6-3.4.2-ubuntu20.04
+$ docker run --gpus all --rm -p 9400:9400 --name dcgm_exporter nvcr.io/nvidia/k8s/dcgm-exporter:3.3.6-3.4.2-ubuntu20.04
 ```
 
 ### 3. DCGM_Exporter 서비스 구성 및 실행 
 - DCGM_Exporter를 서비스 형태로 구성하는 경우 다음과 같이 구성
 
-> vim /etc/systmed/system/dcgm-exporter.service
+> vim /etc/systemd/system/dcgm-exporter.service
 ```
 [Unit]
 Description=NVIDIA DCGM Exporter
@@ -30,7 +30,7 @@ Requires=docker.service
 
 [Service]
 Restart=always
-ExecStart=/usr/bin/docker run --gpus all -rm -p 9400:9400 --name dcgm_exporter nvcr.io/nvidia/k8s/dcgm-exporter:3.3.6-3.4.2-ubuntu20.04
+ExecStart=/usr/bin/docker run --gpus all --rm -p 9400:9400 --name dcgm_exporter nvcr.io/nvidia/k8s/dcgm-exporter:3.3.6-3.4.2-ubuntu20.04
 ExecStop=/usr/bin/docker stop dcgm_exporter
 ExecStopPost=/usr/bin/docker rm dcgm_exporter
 TimeoutSec=30

@@ -38,10 +38,10 @@ if [ $expiry_date -gt 30 ]; then
 fi
 
 echo  "##Port 80 Open Check##"
-port_chck=$( netstat -ntlp | grep -w '0.0.0.0.0:80' | wc -l)
+port_chck=$( netstat -ntlp | grep -w '0.0.0.0:80' | wc -l)
 
 if [ $port_chck -ne 0 ]; then
-        process=$(netstat -tnlp | grep -w '0.0.0.0.0:80' | gawk '{print $7}' | gawk -F'/' '{print $2}')
+        process=$(netstat -tnlp | grep -w '0.0.0.0:80' | gawk '{print $7}' | gawk -F'/' '{print $2}')
         echo "Port 80 Used by $process" 
         echo "" 
 

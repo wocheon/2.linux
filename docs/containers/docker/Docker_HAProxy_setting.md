@@ -34,7 +34,7 @@ cd /root/docker-image/web-1
 >vi Dockerfile
 
 ```docker
-FROM centos:7
+FROM rockylinux:9
 RUN yum -y install httpd
 ADD ./html/index.html /var/www/html/index.html
 EXPOSE 80
@@ -50,7 +50,7 @@ cd /root/docker-image/web-1/html
 >cat index.html
 ```docker
 Docker Conatiner Test
-image : centos:7
+image : rockylinux:9
 name : web-1
 domain : testdomainname.info
 volume : /root/docker-image/web-1/html
@@ -80,7 +80,7 @@ cd /root/docker-image/web-2/html
 >cat index.html
 ```docker
 Docker Conatiner Test
-image : centos:7
+image : rockylinux:9
 name : web-2
 domain : testdomainnames2.com
 volume : /root/docker-image/web-2/html

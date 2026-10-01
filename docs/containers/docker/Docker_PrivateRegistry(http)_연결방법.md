@@ -1,5 +1,7 @@
 # Docker - HTTP로 연결되는 Private Registry 사용방법
 
+> **사용 주의:** HTTP Registry와 insecure-registries는 격리된 테스트망 전용입니다. 운영 환경에서는 TLS Registry를 사용합니다.
+
 
 ## Private Registry 연결시 
 

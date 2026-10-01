@@ -54,7 +54,7 @@ if [ -n "$CHOICE" ]; then
         # 선택한 서버 정보 분리
         IFS=',' read -r account server_type server_name ip zone vm_machine_type vcpus memory <<<"$SELECTED"
         echo -e "\E[;35m* Selected_VM : $server_name ($ip) - $zone \n  Machine_Type : ${vm_machine_type} (${vcpus},${memory})\E[0m"
-        sshpass ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$ip"
+        sshpass ssh -o StrictHostKeyChecking=accept-new "$USER@$ip"
     else
         echo "유효하지 않은 선택입니다."
     fi

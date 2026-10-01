@@ -47,28 +47,28 @@ sudo mysql -u root redmine < /tmp/schema_migrations_only.sql
 ```bash
 sudo mkdir -p /etc/redmine
 cd /etc/redmine
-sudo wget https://www.redmine.org/releases/redmine-6.1.2.tar.gz
-sudo tar -xvf redmine-6.1.2.tar.gz
-sudo rm redmine-6.1.2.tar.gz
+sudo wget https://www.redmine.org/releases/redmine-6.1.4.tar.gz
+sudo tar -xvf redmine-6.1.4.tar.gz
+sudo rm redmine-6.1.4.tar.gz
 
 # 기존 첨부파일 이관
-sudo tar -xzvf /tmp/redmine_files.tar.gz -C /etc/redmine/redmine-6.1.2/
+sudo tar -xzvf /tmp/redmine_files.tar.gz -C /etc/redmine/redmine-6.1.4/
 
 # Slack 플러그인 다운로드 (가장 범용적인 Redmine 6.x 호환 Slack 플러그인 사용)
-cd /etc/redmine/redmine-6.1.2/plugins
+cd /etc/redmine/redmine-6.1.4/plugins
 sudo git clone https://github.com/sciyoshi/redmine-slack.git redmine_slack
 
 # 권한 일원화 및 정적 자원 퍼미션 정규화
-sudo chown -R redmine:redmine /etc/redmine/redmine-6.1.2
-sudo find /etc/redmine/redmine-6.1.2 -type d -exec chmod 755 {} \;
-sudo find /etc/redmine/redmine-6.1.2 -type f -exec chmod 644 {} \;
+sudo chown -R redmine:redmine /etc/redmine/redmine-6.1.4
+sudo find /etc/redmine/redmine-6.1.4 -type d -exec chmod 755 {} \;
+sudo find /etc/redmine/redmine-6.1.4 -type f -exec chmod 644 {} \;
 
 ```
 
 **4단계: DB 연결 설정 (`root` 권한)**
 
 ```bash
-cd /etc/redmine/redmine-6.1.2/config
+cd /etc/redmine/redmine-6.1.4/config
 sudo cp database.yml.example database.yml
 sudo nano database.yml
 
@@ -92,7 +92,7 @@ production:
 
 ```bash
 sudo -u redmine -s /bin/bash
-cd /etc/redmine/redmine-6.1.2
+cd /etc/redmine/redmine-6.1.4
 
 # 플러그인의 의존성까지 포함하여 로컬 벤더링 설치
 bundle config set --local path 'vendor/bundle'
@@ -127,7 +127,7 @@ sudo nano /etc/apache2/sites-available/redmine.conf
 ```apache
 <VirtualHost *:3000>
     ServerName redmine.example.com
-    DocumentRoot /etc/redmine/redmine-6.1.2/public
+    DocumentRoot /etc/redmine/redmine-6.1.4/public
 
     PassengerUser redmine
     PassengerGroup redmine
@@ -136,7 +136,7 @@ sudo nano /etc/apache2/sites-available/redmine.conf
     ErrorLog ${APACHE_LOG_DIR}/redmine_error.log
     CustomLog ${APACHE_LOG_DIR}/redmine_access.log combined
 
-    <Directory /etc/redmine/redmine-6.1.2/public>
+    <Directory /etc/redmine/redmine-6.1.4/public>
         AllowOverride all
         Require all granted
         Options -MultiViews

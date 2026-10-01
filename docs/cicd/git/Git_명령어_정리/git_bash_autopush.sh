@@ -1,7 +1,13 @@
 #!/bin/bash
 time=$(date '+%Y%m%d%H%M')
-branch=$(git branch | gawk '{print $2}')
-remote=$( git remote -v | grep push | gawk '{print $1}' )
+branch=$(git branch --show-current)
+remote=$(git config --get "branch.${branch}.remote")
+remote=${remote:-origin}
+
+if [ -z "$branch" ]; then
+	echo "현재 브랜치를 확인할 수 없습니다."
+	exit 1
+fi
 
 git add .
 
@@ -21,7 +27,7 @@ else
 	exit
 fi
 
-git push $remote $branch --force
+git push "$remote" "$branch"
 
 if [ $? -eq 0 ]; then
 	echo -e "\E[42;37mPUSH : OK\E[0m"

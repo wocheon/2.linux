@@ -1,5 +1,7 @@
 # CI/CD Toolchain (Docker Compose)
 
+> **테스트 환경 전용:** latest 태그, 고정 IP, 예제 비밀번호를 사용합니다. 운영 배포 전 명시 버전과 Secret으로 교체합니다.
+
 ## 개요 
 - CI/CD 구성을 위한 각 요소를 docker-compose로 한번에 배포 가능하도록 구성 
     - 필요시 각 컨테이너 별로 분할하여 사용가능 
@@ -151,7 +153,6 @@ server {
 ## Docker-compose 실행 
 >docker-compose.yml
 ```yml
-version: '3.6'
 services:
   gitlab:
     image: 'gitlab/gitlab-ce:latest'
@@ -196,7 +197,7 @@ services:
       - "nexus.test-cicd.com:172.22.0.100"
 
   nginx_proxy:
-    image: nginx:latest
+    image: nginx:stable
     container_name: cicd-nginx-proxy
     networks:
       cicd-network:
@@ -207,14 +208,14 @@ services:
       - ./nginx_proxy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
   sonarqube:
-    image: sonarqube:latest
+    image: sonarqube:lts-community
     container_name: cicd-sonarqube
     ports:
       - "9000:9000"
     environment:
       - SONAR_JDBC_URL=jdbc:postgresql://cicd-postgresdb:5432/sonar
       - SONAR_JDBC_USERNAME=sonar
-      - SONAR_JDBC_PASSWORD=sonar_password
+      - SONAR_JDBC_PASSWORD=${SONAR_DB_PASSWORD:-sonar_test}
       - SONAR_WEB_CONTEXT=/sonarqube
     depends_on:
       - postgresdb
@@ -227,11 +228,11 @@ services:
       - "nexus.test-cicd.com:172.22.0.100"
 
   postgresdb:
-    image: postgres:15
+    image: postgres:17
     container_name: cicd-postgresdb
     environment:
       POSTGRES_USER: sonar
-      POSTGRES_PASSWORD: sonar_password
+      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD:-sonar_test}
       POSTGRES_DB: sonar
     volumes:
       - ./sonarqube/postgres_data:/var/lib/postgresql/data

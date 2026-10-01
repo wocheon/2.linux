@@ -9,7 +9,7 @@
 
 ## [실습]-docker swarm으로 클러스터링 구성하기 
 ```
-docker-compose down
+docker compose down
 systemctl restart Docker
 docker system prune
 
@@ -162,7 +162,7 @@ ingress           overlay   swarm
 * Dockerfile 생성
 >vim Dockerfile
 ```docker
-FROM centos:7
+FROM rockylinux:9
 RUN yum -y install httpd
 ADD index.html /var/www/html
 CMD /usr/sbin/httpd -D FOREGROUND
@@ -257,7 +257,7 @@ wget https://www.free-css.com/assets/files/free-css-templates/download/page266/r
 ### Dockerfile 작성
 > vi Dockerfile
 ```docker
-FROM centos:7
+FROM rockylinux:9
 RUN yum install -y httpd
 ADD ./radiance /var/www/html/
 CMD /usr/sbin/httpd -D FOREGROUND
@@ -286,7 +286,6 @@ docker pull ciw0707/test:02
 ## yml파일 작성하기
 > vim web.yml
 ```docker
-version: '3'
 
 services:
 
@@ -381,7 +380,6 @@ ansible all -m apt -a "name=git state=present" -k
 ## Docker Swarm visualizer
 >visualizer yml파일
 ```docker
-version: '3'
 
 services:
   visual:

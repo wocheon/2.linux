@@ -244,7 +244,7 @@ pipeline {
                    sh '''
                    pwd
                    ls -lrth                   
-                   ssh -o StrictHostKeyChecking=no root@192.168.2.100 pwd
+                   ssh -o StrictHostKeyChecking=accept-new deploy@192.168.2.100 pwd
                    echo "AA" >> testfile
                    '''
             }
@@ -256,7 +256,7 @@ pipeline {
                    sh '''
                    pwd
                    ls -lrth                   
-                   scp -i $MY_SSH_KEY testfile root@192.168.2.100:/root
+                   scp -i $MY_SSH_KEY testfile deploy@192.168.2.100:/home/deploy
                    '''
                 }
             }

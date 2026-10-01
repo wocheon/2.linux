@@ -79,7 +79,7 @@ docker container run --name websrv2 -d -p 8002:80 nginx
 ### Docker run 옵션 목록
 ```
 docker container run ubuntu /bin/echo "hello world"
-docker container run --name test01 --hostname test001 -it centos:7 /bin/bash
+docker container run --name test01 --hostname test001 -it rockylinux:9 /bin/bash
 ```
 
 * `--name`
@@ -177,7 +177,7 @@ docker container stat test
 
 ### Docker Container 커널 및 hostname
 ```bash
-docker container run - --name centos01 --hostname centos centos:7 /bin/bash
+docker container run --name centos01 --hostname centos rockylinux:9 /bin/bash
 $ uname -a
 # ubuntu의 커널을 사용하는 것을 알수있음
 $ echo $HOSTNAME 
@@ -213,7 +213,7 @@ docker search MariaDB
 
 ### 도커 이미지 태그 변경하기
 ```bash
-docker image tag centos:7 web:1.0
+docker image tag rockylinux:9 web:1.0
 docker image tag web:1.0 user1/ciw0707-centos7:0.1
 ```
 
@@ -222,7 +222,7 @@ docker image tag web:1.0 user1/ciw0707-centos7:0.1
 ### Dockerfile 생성
 > vi Dockerfile 
 ```docker
-FROM centos:7
+FROM rockylinux:9
 RUN yum -y install httpd php php-mysql
 ADD index.html /var/www/html/index.html
 EXPOSE 80
@@ -286,7 +286,7 @@ docker container inspect mariadb01 | grep IPA
 ### Dockerfile 예시
 >vim Dockerfile
 ```docker
-FROM centos:7
+FROM rockylinux:9
 RUN yum -y update
 RUN yum -y install httpd
 EXPOSE 80
@@ -306,7 +306,7 @@ CMD /usr/sbin/httpd -D FOREGROUND
     - 이미지가 현재 로컬에 없다면 도커 허브에서 다운로드한다.
 >ex)
 ```docker
-FROM centos:7
+FROM rockylinux:9
 ```
 
 2. `RUN`
@@ -567,7 +567,7 @@ docker run -d -p 8009:80 localhost:5000/test:nginx
 * Dockerfile 생성
 >vi Dockerfile 
 ```docker
-FROM centos:7
+FROM rockylinux:9
 RUN yum -y install httpd php php-mysql
 ADD index.html /var/www/html/index.html
 ADD a1.php /var/www/html/a1.php

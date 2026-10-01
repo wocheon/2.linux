@@ -164,12 +164,16 @@ gsutil cp gs://test-project-vm-image/17763.3650.221105-1748.rs5_release_svc_refr
 ### Virtual Box 설치
 
 ```bash
-sudo apt update && sudo apt upgrade
-wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
-echo "deb [arch=amd64] http://download.virtualbox.org/virtualbox/debian focal contrib" | sudo tee /etc/apt/sources.list.d/virtualbox.list
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gpg
+curl -fsSL https://www.virtualbox.org/download/oracle_vbox_2016.asc \
+  | sudo gpg --dearmor -o /usr/share/keyrings/oracle-virtualbox.gpg
+. /etc/os-release
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/oracle-virtualbox.gpg] https://download.virtualbox.org/virtualbox/debian $VERSION_CODENAME contrib" \
+  | sudo tee /etc/apt/sources.list.d/virtualbox.list
 
-sudo apt update
-sudo apt install virtualbox-6.1
+sudo apt-get update
+sudo apt-get install -y virtualbox-7.2
 ```
 
 ## 테스트 결과

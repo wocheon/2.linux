@@ -1,3 +1,5 @@
+> **현행화 안내:** CentOS 7은 2024-06-30 EOL입니다. 이 문서는 기존 시스템의 저장소 복구 테스트용으로만 사용합니다.
+
 sudo sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
 sudo sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo
 sudo sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo

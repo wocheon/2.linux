@@ -1,21 +1,23 @@
-# Nginx Proxy SSL 적용 
+# Nginx Proxy SSL 적용
 
-## 개요 
-- 로컬 환경에서 테스트용도로 사용할 도메인의 SSL 인증서를 생성 및 적용 
+> **테스트 환경 전용:** 자체 서명 인증서와 예제 도메인을 사용합니다. 운영 환경에서는 공인 인증서와 Secret을 사용합니다.
+
+## 개요
+- 로컬 환경에서 테스트용도로 사용할 도메인의 SSL 인증서를 생성 및 적용
     - mkcert, openssl 사용
-- 해당 인증서 발급기관을 신뢰하도록 하여 정상적으로 인증서를 사용가능하도록 설정 
-- 기존 nginx proxy를 HTTPS로 사용하도록 변경     
+- 해당 인증서 발급기관을 신뢰하도록 하여 정상적으로 인증서를 사용가능하도록 설정
+- 기존 nginx proxy를 HTTPS로 사용하도록 변경
 
-## 자체 서명 SSL 인증서 만들기 
+## 자체 서명 SSL 인증서 만들기
 
-### OpenSSL 로 생성 
+### OpenSSL 로 생성
 
 - 루트 CA 개인키 생성
 ```
 openssl genrsa -out rootCA.key 2048
 ```
 
-- 루트 CA 자체 서명 인증서 생성 
+- 루트 CA 자체 서명 인증서 생성
 ```sh
 # 10년 유효
 openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.pem \
@@ -84,20 +86,20 @@ openssl x509 -req -in server.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateseria
 
 
 
-### mkcert로 생성 
-- mkcert 설치 
+### mkcert로 생성
+- mkcert 설치
 ```sh
 sudo apt install mkcert
 ```
 
-- mkcert CA 설치 
+- mkcert CA 설치
  ```sh
 mkcert -install
 ```
 
-- mkcert CA pem 파일 위치 확인 
+- mkcert CA pem 파일 위치 확인
 ```sh
-$ mkcert -CAROOT 
+$ mkcert -CAROOT
 /home/ciw0707/.local/share/mkcert
 
 $ ls -l /home/ciw0707/.local/share/mkcert
@@ -108,23 +110,23 @@ total 8
 
 
 
-## 자체 서명 RootCA를 신뢰하는 인증기관으로 등록 
+## 자체 서명 RootCA를 신뢰하는 인증기관으로 등록
 
 ### 윈도우 환경
 
-#### 인증서 관리자에 루트 CA 인증서 등록 
+#### 인증서 관리자에 루트 CA 인증서 등록
 
 - 사용자 인증서 관리자 실행
-    - Ctrl + R > certmgr.msc > `신뢰할수 있는 루트 인증기관` > 인증서 > 빈 공간에 우클릭 > 모든작업 > 가져오기 
+    - Ctrl + R > certmgr.msc > `신뢰할수 있는 루트 인증기관` > 인증서 > 빈 공간에 우클릭 > 모든작업 > 가져오기
         - 혹은 제어판 > `사용자 인증서 관리`
-    
+
     - 필요시 pem -> crt 로 확장자를 변경해도 정상 동작
 
 - 등록 방법
     - OpenSSL
         - 생성된 rootCA.pem 파일을 등록
     - mkcert
-        - `mkcert -install` 로 만든 rootCA.pem 파일을 등록 
+        - `mkcert -install` 로 만든 rootCA.pem 파일을 등록
 
 
 ### 리눅스 환경
@@ -137,7 +139,7 @@ total 8
     # 인증서 갱신 명령 실행
     update-ca-certificates
     ```
-    
+
     - RHEL/CentOS
     ```sh
     # RootCA 인증서를 시스템 인증서에 복사
@@ -153,7 +155,7 @@ total 8
 
 ## Nginx Proxy 설정 변경
 
-### nginx.conf 파일 변경 
+### nginx.conf 파일 변경
 > nginx.conf
 ```
 # 80번 포트 HTTP -> HTTPS 리다이렉트
@@ -250,13 +252,12 @@ server {
 
 
 ### docker-compose.yml 변경
-- 내부에서 자체 생성 RootCA 인증서를 신뢰하게끔 하기위해서는 RootCA 인증서를 등록하는 과정이 필요 
+- 내부에서 자체 생성 RootCA 인증서를 신뢰하게끔 하기위해서는 RootCA 인증서를 등록하는 과정이 필요
 - gitlab 디렉토리의 경우, /etc/gitlab/trusted-certs 디렉토리에 인증서를 넣어야 webhook 가능
 
 > docker-compose.yml
 
 ```yml
-version: '3.6'
 services:
   gitlab:
     image: 'gitlab/gitlab-ce:latest'
@@ -309,14 +310,14 @@ services:
       - "nexus.test-cicd.com:172.22.0.100"
 
   sonarqube:
-    image: sonarqube:latest
+    image: sonarqube:lts-community
     container_name: cicd-sonarqube
     ports:
       - "9000:9000"
     environment:
       - SONAR_JDBC_URL=jdbc:postgresql://cicd-postgresdb:5432/sonar
       - SONAR_JDBC_USERNAME=sonar
-      - SONAR_JDBC_PASSWORD=sonar_password
+      - SONAR_JDBC_PASSWORD=${SONAR_DB_PASSWORD:-sonar_test}
       - SONAR_WEB_CONTEXT=/sonarqube
     depends_on:
       - postgresdb
@@ -331,11 +332,11 @@ services:
       - "nexus.test-cicd.com:172.22.0.100"
 
   postgresdb:
-    image: postgres:15
+    image: postgres:17
     container_name: cicd-postgresdb
     environment:
       POSTGRES_USER: sonar
-      POSTGRES_PASSWORD: sonar_password
+      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD:-sonar_test}
       POSTGRES_DB: sonar
     volumes:
       - ./sonarqube/postgres_data:/var/lib/postgresql/data
@@ -364,7 +365,7 @@ services:
       - "nexus.test-cicd.com:172.22.0.100"
 
   nginx_proxy:
-    image: nginx:latest
+    image: nginx:stable
     container_name: cicd-nginx-proxy
     networks:
       cicd-network:
@@ -388,25 +389,25 @@ networks:
 
 ```
 
-- docker-compose 재실행 
+- docker-compose 재실행
 ```
-docker-compose down 
-docker-compose up --build -d
+docker compose down
+docker compose up --build -d
 ```
 
 ### Container 내 RootCA 인증서 반영
 - Container에 volume을 통해 붙인 RootCA인증서는 별도 명령을 수행해야 업데이트됨
     - Debian/Ubuntu : `update-ca-certificates`
     - RHEL/CentOS : `update-ca-trust extract`
-    - 시스템별로 명령이 다르므로 확인 후 수행 필요 
+    - 시스템별로 명령이 다르므로 확인 후 수행 필요
 
 - jenkins, sonarqube 컨테이너는 Java Truststore에 인증서를 등록하는 작업이 필요
-    - 미등록시 sonarqube scan 및 quality gate 동작시 오류 발생 
+    - 미등록시 sonarqube scan 및 quality gate 동작시 오류 발생
     - 등록 후, Container 재시작해야 정상 반영
 
 - sonarqube 용 postgresdb에는 해당 명령이 없으며, 외부 통신이 필요하지 않으므로 작업 대상에서 제외
 
-- 자동 업데이트용 스크립트 
+- 자동 업데이트용 스크립트
 > update-ca-certificates.sh
 ```bash
 #!/bin/bash
@@ -418,7 +419,7 @@ JAVA_HOME='/opt/java/openjdk'
 rootCA_crtfile='/usr/local/share/ca-certificates/openssl_rootCA.crt'
 #rootCA_crtfile='/usr/local/share/ca-certificates/mkcert_rootCA.crt'
 
-# 1. update-ca-trust , update-ca-certificates 로 신뢰하는 인증서 목록에 추가 
+# 1. update-ca-trust , update-ca-certificates 로 신뢰하는 인증서 목록에 추가
 echo "# Update-ca"
 for i in $(docker ps -a --format "{{.Names}}" | grep cicd)
 do
@@ -449,7 +450,7 @@ do
         fi
 done
 
-# 3. Jenkins, Sonarqube 컨테이너 재시작 
+# 3. Jenkins, Sonarqube 컨테이너 재시작
 echo "# Restart Container"
 read -p "* Restart Containers ?:" ans
 
@@ -460,43 +461,43 @@ fi
 ```
 
 
-## 기존 Container 내 URL 설정 변경 
-- Nginx-Proxy의 프로토콜이 HTTP -> HTTPS로 변경됨에 따라, 기존 서버내 http로 설정된 URL을 변경 필요 
+## 기존 Container 내 URL 설정 변경
+- Nginx-Proxy의 프로토콜이 HTTP -> HTTPS로 변경됨에 따라, 기존 서버내 http로 설정된 URL을 변경 필요
 
 
-### jenkins 
+### jenkins
 - jenkins 관리 > system
     - Jenkins Location
-        - Jenkins URL 
+        - Jenkins URL
     - SonarQube servers
         - Server URL
     - GitLab
         - GitLab connections
             - GitLab host URL
 
-- pipeline 스크립트 
-    - 기존 URL의 http를 https로 변경 
+- pipeline 스크립트
+    - 기존 URL의 http를 https로 변경
     - NEXUS_URL_PORT를  80 -> 443으로 변경
 
 ### gitlab
-- Admin 영역 > 설정 > 일반 > 공개 범위 및 엑세스 설정 
-    - HTTP(S)용 커스텀 Git 클론 URL 
+- Admin 영역 > 설정 > 일반 > 공개 범위 및 엑세스 설정
+    - HTTP(S)용 커스텀 Git 클론 URL
         - http -> https 로 변경
 
 - 기존 프로젝트 내 Webhook이 http를 사용하는 경우, https URL로 재생성 필요
 
-- Admin 영역 > 응용 프로그램 
+- Admin 영역 > 응용 프로그램
     - GitLab Web IDE (파일 수정 시 웹IDE 실행)
         - 콜백 URL : https://test-cicd.com/gitlab/-/ide/oauth_redirect
-        - 범위 : api 
+        - 범위 : api
 
-### sonarqube 
+### sonarqube
 
 - Administration > Configuration > General Settings > Genral
-    - Server base URL 
-        - https -> htttps 
+    - Server base URL
+        - https -> htttps
 
-- Administration > Configuration > Webhooks > URL 
+- Administration > Configuration > Webhooks > URL
     - http -> https
 
 ### nexus

@@ -1,6 +1,8 @@
 
 ## solr 구성 개념 정리 
 
+> **버전 안내:** 컨테이너 예제는 Solr 9.10.1 기준입니다. `test_solr_jdk18/lib`의 SolrJ 8.11.2 JAR는 기존 마이그레이션 테스트용입니다.
+
 ### 참고 - Solr Cloud 구성 예시
 ```
 # - Solr Cloud (4 Shards, 2 Replicas)

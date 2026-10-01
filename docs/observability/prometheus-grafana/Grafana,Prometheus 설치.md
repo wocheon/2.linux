@@ -1,5 +1,7 @@
 # Prometheus, Grafana, NodeExporter 설치
 
+> **Legacy 테스트 문서:** CentOS 7과 Prometheus 2.x 기반 설치 기록입니다. 신규 구성은 현재 릴리스의 변경사항을 확인합니다.
+
 ## Prometheus
 
 * Prometheus 설치

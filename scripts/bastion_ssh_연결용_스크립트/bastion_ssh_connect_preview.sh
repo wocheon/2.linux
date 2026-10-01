@@ -174,6 +174,5 @@ printf '\033[35m* Selected_VM : %s (%s) - %s\n  Machine_Type : %s (%s,%s)\033[0m
     "$server_name" "$ip" "$zone" "$vm_machine_type" "$vcpus" "$memory"
 
 sshpass ssh \
-    -o StrictHostKeyChecking=no \
-    -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=accept-new \
     "$CURRENT_USER@$ip"

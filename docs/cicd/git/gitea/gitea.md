@@ -75,7 +75,6 @@ docker run -d --name gitea \
 ### docker-compose
 
 ```yaml
-version: "3"
 services:
   gitea:
     image: gitea/gitea:1.22.0

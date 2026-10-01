@@ -1,5 +1,7 @@
 # CentOS To Rocky
 
+> **현행화 안내:** CentOS 7 기반 마이그레이션 기록입니다. 실행 전 ELevate와 대상 Rocky Linux의 현재 지원 조합을 확인합니다.
+
 ## 개요
 - CentOS7 EOS로 인하여 Rocky Linux로 업데이트를 진행 
 - 별도 스크립트를 실행하는 방식으로 진행 

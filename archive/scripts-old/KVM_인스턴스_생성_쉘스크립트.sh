@@ -212,7 +212,7 @@ if [ $method1 = 1 ]; then
 #use virtbuilder
 virt-builder ${vmos1} --format qcow2 --size ${vdisk1}G -o /vm/${vmos1}-${vmname1}.qcow2 --root-password password:${rootps1} ${web1} ${host1}
 
-virt-builder centos-7.8 --format qcow2 --size 6G -o /root/aa.qcow2 --root-password password:test123 --install docker
+virt-builder centos-7.8 --format qcow2 --size 6G -o /root/aa.qcow2 --root-password password:${rootps1} --install docker
 
 #if [ $copy1 = 1 ]; then
 #virt-copy-in -a /vm/${vmos1}-${vmname1}.qcow2 /root/iplist /root

@@ -1,5 +1,7 @@
 # Apache Kafka
 
+> **현행화 안내:** Kafka 4.x는 KRaft 전용이며 ZooKeeper 모드를 지원하지 않습니다. 아래 설치 예제는 KRaft 기준입니다.
+
 ##  Apache Kafka ? 
 - 대규모 실시간 데이터 스트리밍을 처리하는 데 특화된 분산 메시징 시스템
 - 주로 데이터 파이프라인, 실시간 분석, 로그 수집, 이벤트 기반 아키텍처 등에 사용
@@ -23,12 +25,9 @@
     - 메시지가 분류되어 저장되는 이름 단위.
     - 예: login-events, purchase-orders, user-activity 등.
 
-- Zookeeper
-    - Kafka 클러스터 상태를 관리 (리더 선출, 설정 저장 등).
-    - Kafka 2.8 이후부터는 Zookeeper 없이 동작하는 KRaft 모드도 제공됨.
-        - Kafka 2.8 이전: 반드시 Zookeeper 필요
-        - Kafka 2.8~: KRaft 모드 (Zookeeper 없이 운영) 지원
-        - Kafka 3.x~: KRaft가 안정화되어 점차 기본 구성이 되고 있음
+- KRaft
+    - Kafka 자체 메타데이터 쿼럼으로 클러스터 상태와 리더 선출을 관리.
+    - Kafka 4.x는 ZooKeeper 모드를 제거하고 KRaft만 지원.
 
 
 
@@ -71,14 +70,13 @@ $ mkdir -p apache_kafka/binary
 $ cd apache_kafka/binary
 
 # Kafka Binary 파일 다운로드 
-$ wget https://downloads.apache.org/kafka/4.0.0/kafka_2.13-4.0.0.tgz
-$ tar -xvzf kafka_2.13-4.0.0.tgz
-$ cd kafka_2.13-4.0.0
+$ wget https://downloads.apache.org/kafka/4.2.2/kafka_2.13-4.2.2.tgz
+$ tar -xvzf kafka_2.13-4.2.2.tgz
+$ cd kafka_2.13-4.2.2
 
 # 설치된 Kafka 버전 정상 확인
 ./bin/kafka-server-start.sh --version
-[2025-05-19 13:35:32,656] INFO Registered kafka:type=kafka.Log4jController MBean (kafka.utils.Log4jControllerRegistration$)
-4.0.0
+4.2.2
 ```    
 
 ### 최초 설정 및 kafka 서버 실행

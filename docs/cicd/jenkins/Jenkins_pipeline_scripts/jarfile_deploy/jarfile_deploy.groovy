@@ -76,9 +76,9 @@ pipeline {
                                     echo "[Server Info] Server Name: ${server.name} Host: ${server.host}\n -Source ID: ${jar.sourceId} Process Name: ${jar.ProcName}"
                                     echo "- Source  File : ${jar.source_file}, Jar_Path: ${jar.jarPath}"
                                     sh """
-                                    ssh -o StrictHostKeyChecking=no -i $MY_SSH_KEY user@${server.host} "if [ -f ${jar.jarPath} ];then rm -rf ${jar.jarPath}_old; cp ${jar.jarPath} ${jar.jarPath}_old; else echo "#Copy New File"; fi;"
-                                    scp -o StrictHostKeyChecking=no -i $MY_SSH_KEY user@${server.host} source_files/${jar.source_file} user@${server.host}:${jar.jarPath}
-                                    ssh -o StrictHostKeyChecking=no -i $MY_SSH_KEY user@${server.host} "ls -lrth ${jar.jarPath}"
+                                    ssh -o StrictHostKeyChecking=accept-new -i $MY_SSH_KEY user@${server.host} "if [ -f ${jar.jarPath} ];then rm -f ${jar.jarPath}_old; cp ${jar.jarPath} ${jar.jarPath}_old; else echo "#Copy New File"; fi;"
+                                    scp -o StrictHostKeyChecking=accept-new -i $MY_SSH_KEY source_files/${jar.source_file} user@${server.host}:${jar.jarPath}
+                                    ssh -o StrictHostKeyChecking=accept-new -i $MY_SSH_KEY user@${server.host} "ls -lrth ${jar.jarPath}"
                                     """
                                 }
                             }

@@ -168,7 +168,6 @@ VLOUME /var/log
 ## Dockerfile 예시
 * Wordpress-Mysql 연결
 ```docker
-version: '3.1'
 
 services:
 

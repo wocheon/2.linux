@@ -75,7 +75,7 @@ if [ -n "$CHOICE" ]; then
         if [ -n "$PASSWORD" ]; then
             echo "접속 중: $ip (계정: $USER)"
             # SSH 접속 명령 실행 (패스워드 입력을 자동으로 처리하려면 sshpass 사용 필요)
-            sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$ip"
+            sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=accept-new "$USER@$ip"
         else
             echo "패스워드가 입력되지 않았습니다. 접속을 취소합니다."
         fi
@@ -163,7 +163,7 @@ if [ -n "$CHOICE" ]; then
         # 선택한 서버 정보 분리
         IFS=',' read -r account server_type server_name ip zone vm_machine_type vcpus memory <<<"$SELECTED"
         echo -e "\E[;35m* Selected_VM : $server_name ($ip) - $zone \n  Machine_Type : ${vm_machine_type} (${vcpus},${memory})\E[0m"
-        sshpass ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$ip"
+        sshpass ssh -o StrictHostKeyChecking=accept-new "$USER@$ip"
     else
         echo "유효하지 않은 선택입니다."
     fi

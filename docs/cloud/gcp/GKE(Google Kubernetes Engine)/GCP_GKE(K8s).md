@@ -1,5 +1,7 @@
 # K8S - GCP GKE(Google Kubernetes Engine)
 
+> **테스트 문서:** 사용자 이미지는 Artifact Registry를 기준으로 작성합니다. `gcr.io/cloud-builders/*`는 Cloud Build 공식 빌더 이미지입니다.
+
 
 ## 신규 프로젝트 생성
 - 새프로젝트를 만들고 프로젝트 id 복사
@@ -134,7 +136,7 @@ kubectl get pod -n kube-system
 
 - k8s sample 파일 가져오기 (git clone)
 ```bash
-cd mkdir k8s ; cd k8s
+mkdir -p k8s && cd k8s
 
 git clone https://github.com/beomtaek78/btstore
 cd btstore/kube/
@@ -142,11 +144,16 @@ cd btstore/kube/
 
 - docker 설치
 ```bash
-sudo apt install apt-transport-https ca-certificates curl software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
-sudo apt update
-apt-cache policy docker-ce
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+. /etc/os-release
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu ${UBUNTU_CODENAME:-$VERSION_CODENAME} stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 ```
 
 * Cloud build로 docker image 빌드
@@ -155,13 +162,13 @@ apt-cache policy docker-ce
 ```yml
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/imageview:blue', './blue']
+    args: ['build', '-t', 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/test-repo/imageview:blue', './blue']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/imageview:green', './green']
-images: ['gcr.io/$PROJECT_ID/imageview:blue', 'gcr.io/$PROJECT_ID/imageview:green']
+    args: ['build', '-t', 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/test-repo/imageview:green', './green']
+images: ['asia-northeast3-docker.pkg.dev/$PROJECT_ID/test-repo/imageview:blue', 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/test-repo/imageview:green']
 ```
 ```
-gcloud build submit --config kube/config/cloudbuild.yaml 
+gcloud builds submit --config kube/config/cloudbuild.yaml
 ```
 
 ```
@@ -188,7 +195,7 @@ spec:
       color: blue (green은 그린으로)
     spec:
       containers:
-      - image: gcr.io/ciw0707-0517/imageview:blue
+      - image: asia-northeast3-docker.pkg.dev/PROJECT_ID/test-repo/imageview:blue
    #                 [PROJECT_ID]
 ```
 
@@ -207,9 +214,9 @@ kubectl get pod -o wide
 kubectl describe pod webserver-blue-88df46c95-2hhdm |grep IP
 ```
 
-- Centos7 이미지로 내부 접속용 pod 생성
+- Rocky Linux 이미지로 내부 접속용 pod 생성
 ```
-kubectl run -it --image=centos:7 bash
+kubectl run shell-test --rm -it --restart=Never --image=rockylinux:9 -- bash
 ```
 
 - pod의 ip의 웹서버 동작 확인하기
@@ -256,8 +263,8 @@ kubectl apply -f config/service.yaml
 
 ```bash
 #docker 이미지 빌드
-docker build -t gcr.io/ciw0707-0517/imageview:nginx ./nginx.d/
-docker build -t gcr.io/ciw0707-0517/imageview:httpd ./httpd.d/
+docker build -t asia-northeast3-docker.pkg.dev/$PROJECT_ID/test-repo/imageview:nginx ./nginx.d/
+docker build -t asia-northeast3-docker.pkg.dev/$PROJECT_ID/test-repo/imageview:httpd ./httpd.d/
 
 # Cloud 빌드
 gcloud builds submit --config ./cloudbuild.yaml 
@@ -270,19 +277,20 @@ kubectl create -f service.yaml
 
 ## 로컬에서 GCP 이미지 저장소로 이미지 push하기
 
-- CentOS 7 이미지 pull (docker hub에서)
+- Rocky Linux 이미지 pull (Docker Hub)
 ```
-docker pull centos:7
+docker pull rockylinux:9
 ```
 
 - 이미지 tag 변경
 ```
-docker tag centos:7 gcr.io/ciw0707-0517/mycentos:1.0
+docker tag rockylinux:9 asia-northeast3-docker.pkg.dev/$PROJECT_ID/test-repo/rockylinux:9
 ```
 
 - GCP 이미지 저장소에 push
 ```
-gcloud docker -- push gcr.io/ciw0707-0517/mycentos:1.0
+gcloud auth configure-docker asia-northeast3-docker.pkg.dev
+docker push asia-northeast3-docker.pkg.dev/$PROJECT_ID/test-repo/rockylinux:9
 ```
 
 ## kubectl 자동완성 켜기 

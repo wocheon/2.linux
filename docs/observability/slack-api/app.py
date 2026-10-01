@@ -8,11 +8,11 @@ def load_variables(file_name):
     variables = {}
     with open(file_name, 'r') as file:
         for line in file:
-            key, value = line.strip().split('=')
+            key, value = line.strip().split('=', 1)
             variables[key] = value
     return variables
 
-config = load_variables('infra_variables.txt')
+config = load_variables('variables.txt')
 infra_config = load_variables('infra_variables.txt')
 smslog_config = load_variables('smslog_variables.txt')
 

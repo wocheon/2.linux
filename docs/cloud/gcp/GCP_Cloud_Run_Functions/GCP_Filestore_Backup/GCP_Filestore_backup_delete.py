@@ -5,6 +5,7 @@ from google.auth.transport.requests import AuthorizedSession
 import time
 import requests
 import json
+from datetime import datetime
 
 PROJECT_ID = 'project-id'
 BACKUP_REGION = 'region'
@@ -20,8 +21,9 @@ retention_seconds = BACKUP_RETENTION_TIME_DAYS * 24 * 60 * 60
 
 def delete_backup(request):
     backups_to_delete = []
-    trigger_run_url = "https://file.googleapis.com/v1beta1/projects/{}/locations/{}/backups".format(PROJECT_ID, BACKUP_REGION)
+    trigger_run_url = "https://file.googleapis.com/v1/projects/{}/locations/{}/backups".format(PROJECT_ID, BACKUP_REGION)
     r = authed_session.get(trigger_run_url)
+    r.raise_for_status()
     data = r.json()
 
     if not data:
@@ -31,19 +33,21 @@ def delete_backup(request):
 
     while 'nextPageToken' in data:
         nextPageToken = data['nextPageToken']
-        trigger_run_url_next = "https://file.googleapis.com/v1beta1/projects/{}/locations/{}/backups?pageToken={}".format(PROJECT_ID, BACKUP_REGION, nextPageToken)
+        trigger_run_url_next = "https://file.googleapis.com/v1/projects/{}/locations/{}/backups?pageToken={}".format(PROJECT_ID, BACKUP_REGION, nextPageToken)
         r = authed_session.get(trigger_run_url_next)
+        r.raise_for_status()
         data = r.json()
         backups_to_delete.extend(data.get('backups', []))
 
     deleted_backups = []
     for backup in backups_to_delete:
-        backup_time = backup['createTime'][:-4]
-        backup_time = float(time.mktime(time.strptime(backup_time, "%Y-%m-%dT%H:%M:%S.%f")))
+        backup_time = datetime.fromisoformat(
+            backup['createTime'].replace('Z', '+00:00')
+        ).timestamp()
         if now - backup_time > retention_seconds:
             backup_name = backup['name']
             print(f"Deleting {backup_name} in the background.")
-            r = authed_session.delete(f"https://file.googleapis.com/v1beta1/{backup_name}")
+            r = authed_session.delete(f"https://file.googleapis.com/v1/{backup_name}")
             if r.status_code == requests.codes.ok:
                 print(f"{r.status_code}: Successfully deleted {backup_name}.")
                 deleted_backups.append(backup_name)
