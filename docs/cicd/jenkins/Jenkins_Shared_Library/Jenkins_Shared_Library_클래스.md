@@ -11,8 +11,8 @@ shared-library/
 
 - 복잡한 비즈니스 로직, 유틸리티 함수, 재사용 가능한 객체 등을 구조적으로 관리 가능
 
-- 전역함수는 `스크립트 형식(Scripted Groovy)`으로 작성하며, 클래스는 `클래스 기반 Groovy(OO Groovy)` 형식으로 작성 
-  - 이로 인해 클래스는 표준 Java/Groovy 프로젝트처럼 패키지 구조를 가질 수 있음  
+- 전역함수는 `스크립트 형식(Scripted Groovy)`으로 작성하며, 클래스는 `클래스 기반 Groovy(OO Groovy)` 형식으로 작성
+  - 이로 인해 클래스는 표준 Java/Groovy 프로젝트처럼 패키지 구조를 가질 수 있음
   - 전역함수 혹은 Jenkinsfile에서 Import하여 사용하며 객체 지향 프로그래밍 가능
 
 ### Class의 주요 장점
@@ -20,16 +20,16 @@ shared-library/
   - 반복되는 코드를 줄이고, 유지보수가 용이해짐
 
 - 네임스페이스 및 충돌 방지
-  - src 디렉토리 내 패키지 구조를 활용해 네임스페이스를 분리하므로, 동일 명칭의 함수 혹은 클래스 충돌을 방지 
+  - src 디렉토리 내 패키지 구조를 활용해 네임스페이스를 분리하므로, 동일 명칭의 함수 혹은 클래스 충돌을 방지
 
-- 글로벌 변수(vars/)와의 역할 분리 가능 
+- 글로벌 변수(vars/)와의 역할 분리 가능
   - 전역 함수(vars/)는 Pipeline에서 간단히 호출할 수 있는 진입점 역할로 사용
-  - 클래스(src/)에서 실제 비즈니스 로직 혹은 복잡한 처리를 담당 
-  - 명확하게 역할 분리가 가능해짐 
+  - 클래스(src/)에서 실제 비즈니스 로직 혹은 복잡한 처리를 담당
+  - 명확하게 역할 분리가 가능해짐
 
 - 구조적이고 체계적인 코드 관리
   - 기능별, 도메인별로 클래스를 나누어 src 디렉토리 하위에 패키지 구조로 정리가능
-    - 코드의 가독성, 유지보수성, 확장성 향상  
+    - 코드의 가독성, 유지보수성, 확장성 향상
 
 - 테스트 및 재사용성 증가
   - Class는 Groovy의 일반 코드이므로 CI/CD 파이프라인 외부에서도 독립적으로 테스트 및 검증이 가능 EX) JUnit
@@ -38,9 +38,9 @@ shared-library/
 
 ## Classs 구성 및 사용 시 유의 사항
 
-### 클래스 구성 시 도메인 기반 명명 규칙을 사용하여 작성 
+### 클래스 구성 시 도메인 기반 명명 규칙을 사용하여 작성
   - 충돌 방지 및 구조화된 네임스페이스를 위해 사용
-  - EX) src/org/example/Helper.groovy -> org.example.Helper 
+  - EX) src/org/example/Helper.groovy -> org.example.Helper
     ```
     src/
     └── org
@@ -53,13 +53,13 @@ shared-library/
             ├── slack
             │   └── NotifySlack.groovy
             └── util
-                └── CommonUtils.groovy  
+                └── CommonUtils.groovy
     ```
 
 
 ### 클래스 구성시 직렬화(Serialization) 선언 필요
 - 빌드가 대기상태로 돌입, Jenkins 재시작, 외부 입력 대기 등의 상태로 들어가능 경우 파이프라인의 실행상태를 안전하게 저장 필요
- - 이때 사용되는 객체가 직렬화(Serialization) 할수 있어야 Jenkins 가 이를 디스크에 저장하고 추후에 다시 읽어서 파이프라인을 실행할 수 있음 
+ - 이때 사용되는 객체가 직렬화(Serialization) 할수 있어야 Jenkins 가 이를 디스크에 저장하고 추후에 다시 읽어서 파이프라인을 실행할 수 있음
 
 - 직렬화 선언 예시
 ```groovy
@@ -76,11 +76,11 @@ class NodeInfo implements Serializable {
     }
 ......
 }
-```   
+```
 
 #### 직렬화가 필요 없는 대상
 1. 해당 객체가 단순 입력값을 받아 결과를 반환하는 정적 매서드(Static Method)
-    - EX) 단순 수학 계산 클래스 
+    - EX) 단순 수학 계산 클래스
       ```groovy
       // src/org/example/MathUtils.groovy
       package org.example
@@ -130,7 +130,7 @@ class NodeInfo implements Serializable {
 
   // Class Import
   import org.example.Greeting
-  
+
   pipeline {
       agent any
       stages {
@@ -152,7 +152,7 @@ class NodeInfo implements Serializable {
 ### `Script` 블록 내에서만 사용 가능
 
 - Jenkinsfile에서 클래스를 사용하려면 반드시 script 블록 안에서 인스턴스를 생성하고 메서드를 호출해야 함
-  - 만약 `steps` 블록에서 직접 시도하면 오류 발생 
+  - 만약 `steps` 블록에서 직접 시도하면 오류 발생
   - script 블록에서만 조건문/반복문/변수선언/클래스 인스턴스화 기능을 사용가능
   - steps 블록은 Jenkins의 내장 스텝 (echo, sh, checkout) 과 플러그인 스텝 만을 순차 실행 가능하도록 설계됨
 
@@ -171,10 +171,10 @@ Jenkins의 내장 기능(스텝)을 클래스 내부에서 호출하려면 conte
 @Library('jenkins_shared_library') _
 
 // example.Utils 클래스 import
-import org.example.Utils                
+import org.example.Utils
 
 // Import 한 변수를 전역으로(여러 Stage) 사용하기 위해 변수 선언
-def utils 
+def utils
 
 pipeline {
     agent any
@@ -192,15 +192,15 @@ pipeline {
 ### 참고 - def/void
 - Mehtod 선언 시  반환값이 있다면 def, 없다면 void로 선언할 수 있음
   - Jenkins Pipeline / Groovy 에서는 굳이 구분하지는않지만, 반환값이 없다는 의미로서 구분하여 쓸수 있음
-  - `steps/script.input` 이나 `return` 값이 존재하는 Method는 def만 가능 
-  - 
+  - `steps/script.input` 이나 `return` 값이 존재하는 Method는 def만 가능
+  -
 
 - EX) def로 써야하는 Method
   ```groovy
     // Return 값이 있으므로 def로 써야함 //
     def timestamp(String format = "yyyy-MM-dd HH:mm:ss") {
         return new Date().format(format, TimeZone.getTimeZone('Asia/Seoul'))
-    }  
+    }
   ```
 
 - EX) void를 쓸수있는 Method
@@ -210,7 +210,7 @@ pipeline {
     void cleanWorkspace() {
         script.sh 'rm -rf * .[^.]* || true'
         script.echo "Workspace cleaned."
-    } 
+    }
   ```
 
 
@@ -238,9 +238,9 @@ pipeline {
     ```
 
 #### vars/hello.groovy
-- 해당 Class를 전역함수에서 사용하는 경우 
+- 해당 Class를 전역함수에서 사용하는 경우
 
-    ```groovy    
+    ```groovy
     import org.example.Helper
 
     def call(String name = 'World') {
@@ -264,7 +264,7 @@ pipeline {
           }
       }
   }
-  ```    
+  ```
 
 ## Jenkins Shared Library Class 구성 #1 - 유사한 성격의 함수를 묶어 하나의 클래스로 구성
 
@@ -282,7 +282,7 @@ src/
 ```
 
 ### src/org/jenkinslib/node/NodeInfo.groovy
-- 노드 정보 확인용 클래스 
+- 노드 정보 확인용 클래스
 ```groovy
 package org.jenkinslib
 
@@ -329,7 +329,7 @@ class NodeInfo implements Serializable {
     /* GPU 노드 여부 확인 (NVIDIA 드라이버 존재 여부) */
     def isGPUNode() {
        return script.sh(script: 'command -v nvidia-smi', returnStatus: true) == 0
-    }  
+    }
 }
 ```
 
@@ -354,15 +354,15 @@ class NotifySlack implements Serializable {
     void notifySlackMsg(String channel, String customMessage = '') {
         def baseMessage = "Slack Message"
         def msg = customMessage ? "${customMessage}" : baseMessage
-        
+
         script.slackSend(channel: channel, color: 'good', message: msg)
     }
-    
+
     /* Slack 채널로 메시지 전송 - 빌드 성공시에만 */
     void notifySlackSucc(String channel, String customMessage = '') {
         def baseMessage = ":hammer_and_wrench: Build Info: *${script.env.JOB_NAME} #${script.env.BUILD_NUMBER}*\n:globe_with_meridians:<${script.env.BUILD_URL}|View Result On Jenkins>"
         def msg = customMessage ? "${customMessage}\n${baseMessage}" : baseMessage
-        
+
         script.slackSend(channel: channel, color: 'good', message: msg)
     }
 
@@ -393,7 +393,7 @@ class NotifySlack implements Serializable {
 
         script.slackSend(channel: channelID, message: message, color: '#36a64f')  // 초록색 (원하는 색으로 변경 가능)
         script.input message: '배포하시겠습니까?', ok: '승인'
-    }    
+    }
 }
 ```
 
@@ -497,7 +497,7 @@ class CommonUtils implements Serializable {
         script.sh 'printenv | sort'
     }
 
-    /* 특정 파일 내 key=value 형태의 환경 변수를 파싱하여 Map으로 반환 */     
+    /* 특정 파일 내 key=value 형태의 환경 변수를 파싱하여 Map으로 반환 */
     def loadVariables(String file) {
         return script.readFile(file)
             .split('\n')
@@ -521,7 +521,7 @@ class CommonUtils implements Serializable {
             }
     }
 
-    //  Shared Library 리소스 로드용 - 리소스 파일을 지정하여 loadVariablesFromString를 호출 
+    //  Shared Library 리소스 로드용 - 리소스 파일을 지정하여 loadVariablesFromString를 호출
     def loadEnvVariables(String resourcePath) {
         def content = script.libraryResource(resourcePath)
         return loadVariablesFromString(content)
@@ -532,9 +532,89 @@ class CommonUtils implements Serializable {
     void cleanWorkspace() {
         script.sh 'rm -rf * .[^.]* || true'
         script.echo "Workspace cleaned."
-    }        
+    }
 }
 ```
 
-## Jenkins Shared Library Class 구성 #2 - docker 이미지 리빌드 & 컨테이너 재배포 용 Class
-* - 구성 후 업데이트 예정
+## Jenkins Shared Library Class 구성 #2 - Docker 이미지 리빌드와 컨테이너 재배포
+
+Jenkins Agent가 설치된 단일 테스트 VM에서 `compose.yaml`과 `Dockerfile`을 체크아웃한 뒤 실행하는 예제입니다. Registry에서 이미지를 받는 배포는 [Jenkins 배포 예제](../Jenkins_CICD_구성/Jenkins_배포_예제.md)를 참고합니다.
+
+### `src/org/jenkinslib/deploy/ComposeRelease.groovy`
+
+```groovy
+package org.jenkinslib.deploy
+
+class ComposeRelease implements Serializable {
+    private final def steps
+    private final String service
+
+    ComposeRelease(steps, String service = 'app') {
+        if (!(service ==~ /^[A-Za-z0-9_-]+$/)) {
+            steps.error('잘못된 Compose 서비스 이름')
+        }
+        this.steps = steps
+        this.service = service
+    }
+
+    void buildImage() {
+        steps.sh "docker compose build ${service}"
+    }
+
+    void deployContainer() {
+        steps.sh "docker compose up -d --no-deps ${service}"
+    }
+
+    void checkStatus() {
+        steps.sh "docker compose ps ${service}"
+    }
+}
+```
+
+### `compose.yaml`과 Jenkinsfile
+
+```yaml
+services:
+  app:
+    build: .
+    ports:
+      - '8080:8080'
+    restart: unless-stopped
+```
+
+```groovy
+@Library('jenkins_shared_library')
+import org.jenkinslib.deploy.ComposeRelease
+
+pipeline {
+    agent { label 'docker-vm' }
+    stages {
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+        stage('Build image') {
+            steps {
+                script {
+                    new ComposeRelease(this).buildImage()
+                }
+            }
+        }
+        stage('Deploy container') {
+            steps {
+                script {
+                    new ComposeRelease(this).deployContainer()
+                }
+            }
+        }
+        stage('Check status') {
+            steps {
+                script {
+                    new ComposeRelease(this).checkStatus()
+                }
+            }
+        }
+    }
+}
+```
+
+`docker-vm` Agent에는 Docker Engine과 Compose v2가 필요합니다. Docker 사용 권한은 사실상 호스트의 높은 권한이므로 이 예제는 격리된 테스트 VM에서 사용합니다.
