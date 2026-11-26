@@ -245,7 +245,7 @@ pipeline {
 	>예시
 	```
 	Build when a change is pushed to GitLab.
-	GitLab webhook URL: http://34.64.241.60:8080/project/gitlab-test
+	GitLab webhook URL: http://203.0.113.20:8080/project/gitlab-test
 	```
 	- 아래로 내려가서 고급 > Secret token Generate 후 복사
 

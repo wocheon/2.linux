@@ -35,10 +35,10 @@ systemctl restart rsyslog
 
 - 로그파일 확인 
 ```sh
-Jul  9 16:57:41 gcp-ansible-test root: root@165.243.5.20 [1477]: [2024-07-09_16:57:41]  source /etc/profile [0]
-Jul  9 16:57:44 gcp-ansible-test root: root@165.243.5.20 [1477]: [2024-07-09_16:57:44]  systemctl restart rsyslog [0]
-Jul  9 16:57:45 gcp-ansible-test root: root@165.243.5.20 [1477]: [2024-07-09_16:57:45]  ll [0]
-Jul  9 16:57:54 gcp-ansible-test root: root@165.243.5.20 [1477]: [2024-07-09_16:57:54]  cat /etc/profile [0]
-Jul 10 09:19:34 gcp-ansible-test root: root@165.243.5.20 [1291]: [2024-07-10_09:16:26]  vim /etc/profile [0]
-Jul 10 09:21:05 gcp-ansible-test root: root@165.243.5.20 [1291]: [2024-07-10_09:19:41]  vim /etc/rsyslog.conf  [0]
+Jul  9 16:57:41 gcp-ansible-test root: root@203.0.113.10 [1477]: [2024-07-09_16:57:41]  source /etc/profile [0]
+Jul  9 16:57:44 gcp-ansible-test root: root@203.0.113.10 [1477]: [2024-07-09_16:57:44]  systemctl restart rsyslog [0]
+Jul  9 16:57:45 gcp-ansible-test root: root@203.0.113.10 [1477]: [2024-07-09_16:57:45]  ll [0]
+Jul  9 16:57:54 gcp-ansible-test root: root@203.0.113.10 [1477]: [2024-07-09_16:57:54]  cat /etc/profile [0]
+Jul 10 09:19:34 gcp-ansible-test root: root@203.0.113.10 [1291]: [2024-07-10_09:16:26]  vim /etc/profile [0]
+Jul 10 09:21:05 gcp-ansible-test root: root@203.0.113.10 [1291]: [2024-07-10_09:19:41]  vim /etc/rsyslog.conf  [0]
 ```

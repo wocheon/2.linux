@@ -69,13 +69,13 @@ git push origin master
 ```
 $ git log -2
 commit 51b6f440b98d71891bbe710c321c445af2fc4387 (HEAD -> main, origin/main, origin/HEAD)
-Author: wocheon <wocheon07@gmail.com>
+Author: wocheon <user@example.com>
 Date:   Fri Aug 11 16:48:24 2023 +0900
 
     202308111648
 
 commit 617879bbd9b56a10835bf28c5f57411d66097b12
-Author: wocheon <wocheon07@gmail.com>
+Author: wocheon <user@example.com>
 Date:   Fri Aug 11 16:25:06 2023 +0900
 
     Revert "202308111038"
@@ -175,7 +175,7 @@ git push origin master
 
 ## Git 로그인 정보 저장 방법
 ```
-git config --global user.email "ciw0707@naver.com"
+git config --global user.email "user@example.com"
 git config --global user.name "wocheon"
 git config --global user.password "[devleoper > personal access token]"
 git config credential.helper store --global

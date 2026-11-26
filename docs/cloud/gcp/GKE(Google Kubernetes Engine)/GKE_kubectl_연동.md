@@ -29,7 +29,7 @@ gke-gcloud-auth-plugin --version
 ```
  gcloud container clusters list
 NAME                LOCATION           MASTER_VERSION      MASTER_IP      MACHINE_TYPE  NODE_VERSION        NUM_NODES  STATUS
-wocheon07-gke-test  asia-northeast3-a  1.29.0-gke.1381000  34.64.250.154  g1-small      1.29.0-gke.1381000             RUNNING
+wocheon07-gke-test  asia-northeast3-a  1.29.0-gke.1381000  203.0.113.30  g1-small      1.29.0-gke.1381000             RUNNING
 
 
 gcloud container clusters get-credentials wocheon07-gke-test --region=asia-northeast3-a
@@ -113,7 +113,7 @@ Commercial support is available at
 ```
 
 - gcp 방화벽 오픈후 확인
-http://34.22.95.3:31303/
+http://203.0.113.40:31303/
 
 
 ## kubectl 서비스계정관련 오류 
@@ -123,7 +123,7 @@ http://34.22.95.3:31303/
 - service 삭제 
 ```
 [root@gcp-ansible-test ~]# kubectl delete service my-dep
-Error from server (Forbidden): services "my-dep" is forbidden: User "daskete07@gmail.com" cannot delete resource "services" in API group "" in the namespace "default": requires one of ["container.services.delete"] permission(s)
+Error from server (Forbidden): services "my-dep" is forbidden: User "viewer@example.com" cannot delete resource "services" in API group "" in the namespace "default": requires one of ["container.services.delete"] permission(s)
 ```
 
 - gcloud 계정 확인
@@ -133,8 +133,8 @@ Error from server (Forbidden): services "my-dep" is forbidden: User "daskete07@g
 ```    
  gcloud config configurations list
 NAME     IS_ACTIVE  ACCOUNT                                             PROJECT    COMPUTE_DEFAULT_ZONE  COMPUTE_DEFAULT_REGION
-default  True       487401709675-compute@developer.gserviceaccount.com  test-project  asia-northeast3-c     asia-northeast3
-viewer   False      daskete07@gmail.com                                 test-project  asia-northeast3-c     asia-northeast3 #viewr 권한 계정
+default  True       123456789012-compute@developer.gserviceaccount.com  test-project  asia-northeast3-c     asia-northeast3
+viewer   False      viewer@example.com                                 test-project  asia-northeast3-c     asia-northeast3 #viewr 권한 계정
 ```
 
 - gke_gcloud_auth_plugin_cache 확인 후 삭제 

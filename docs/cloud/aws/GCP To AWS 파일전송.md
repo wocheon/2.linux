@@ -168,7 +168,7 @@ Updates are available for some Google Cloud CLI components.  To install them,
 please run:
   $ gcloud components update
 
-You are logged in as: [wocheon07@gmail.com].
+You are logged in as: [user@example.com].
 # 활성화할 GCP 프로젝트 선택
 Pick cloud project to use:
  [1] test-project
